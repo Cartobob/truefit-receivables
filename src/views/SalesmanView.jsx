@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { fmt, fmtDate, ageDays, ageBucket, worstBucket, totalBalance, stripColor, pendingCheques, totalPendingCheques } from "../lib/helpers";
+import { getBillPDFUrl } from "../lib/pdfStorage";
 
 export default function SalesmanView({ salesman }) {
   const [dealers, setDealers] = useState([]);
   const [expanded, setExpanded] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [viewingPDF, setViewingPDF] = useState(null);
 
   useEffect(() => { fetchDealers(); }, [salesman.id]);
 
@@ -26,6 +28,14 @@ export default function SalesmanView({ salesman }) {
 
   const toggle = (id) => setExpanded(e => ({ ...e, [id]: !e[id] }));
 
+  const viewPDF = async (bill) => {
+    if (!bill.pdf_path) return;
+    try {
+      const url = await getBillPDFUrl(bill.pdf_path);
+      setViewingPDF({ url, bill_no: bill.bill_no });
+    } catch { alert("Could not load PDF."); }
+  };
+
   const totalOut = dealers.reduce((s, d) => s + totalBalance(d.bills), 0);
   const totalChq = dealers.reduce((s, d) => s + totalPendingCheques(d.cheques), 0);
   const b30  = dealers.reduce((s, d) => s + (d.bills||[]).filter(b => ageDays(b.bill_date) <= 30).reduce((x, b) => x + Number(b.balance), 0), 0);
@@ -37,6 +47,18 @@ export default function SalesmanView({ salesman }) {
 
   return (
     <div className="fade-in">
+
+      {/* PDF Viewer Modal */}
+      {viewingPDF && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "#1e1c2e", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#c8c4e0" }}>{viewingPDF.bill_no}</span>
+            <button onClick={() => setViewingPDF(null)} style={{ padding: "6px 12px", fontFamily: "'IBM Plex Mono'", fontSize: 11, borderRadius: 6, border: "1px solid #444", background: "transparent", color: "#ccc", cursor: "pointer" }}>✕ Close</button>
+          </div>
+          <iframe src={viewingPDF.url} style={{ flex: 1, border: "none" }} title="Bill PDF" />
+        </div>
+      )}
+
       {/* Outstanding header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
         <div>
@@ -138,7 +160,12 @@ export default function SalesmanView({ salesman }) {
                       return (
                         <div key={bill.id} style={{ padding: "10px 16px 10px 40px", borderBottom: idx < dealer.bills.length - 1 ? "1px solid #f0eef8" : "none", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#faf9fd", flexWrap: "wrap", gap: 6 }}>
                           <div>
-                            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#4a3f6b" }}>{bill.bill_no}</div>
+                            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#4a3f6b" }}>
+                              {bill.bill_no}
+                              {bill.pdf_path && (
+                                <button onClick={() => viewPDF(bill)} style={{ marginLeft: 8, background: "none", border: "none", cursor: "pointer", fontSize: 13 }} title="View Bill PDF">📄</button>
+                              )}
+                            </div>
                             <div style={{ fontSize: 11, color: "#888" }}>{fmtDate(bill.bill_date)}</div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
