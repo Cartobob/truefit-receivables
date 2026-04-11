@@ -9,6 +9,7 @@ const ADMIN_PIN = "0000";
 export default function App() {
   const [auth, setAuth] = useState(null);
   const [salesmen, setSalesmen] = useState([]);
+  const [view, setView] = useState("dashboard");
 
   useEffect(() => {
     const saved = sessionStorage.getItem("rx_auth");
@@ -24,74 +25,71 @@ export default function App() {
   const login = (authObj) => {
     setAuth(authObj);
     sessionStorage.setItem("rx_auth", JSON.stringify(authObj));
+    setView("dashboard");
   };
 
   const logout = () => {
     setAuth(null);
     sessionStorage.removeItem("rx_auth");
+    setView("dashboard");
   };
 
   if (!auth) return <Login salesmen={salesmen} adminPin={ADMIN_PIN} onLogin={login} />;
 
+  const isAdmin = auth.role === "admin";
+
+  const tabs = isAdmin
+    ? [{ id: "dashboard", label: "DEALERS" }, { id: "admin", label: "ADMIN" }]
+    : [{ id: "dashboard", label: "MY DEALERS" }];
+
   return (
-    <div style={{ background: "var(--paper)", minHeight: "100vh", color: "var(--ink)" }}>
-      {/* Header */}
-      <div style={{
-        borderBottom: "2px solid var(--ink)",
-        padding: "0 20px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "stretch",
-        position: "sticky",
-        top: 0,
-        background: "var(--ink)",
-        zIndex: 100,
-        gap: 8
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0" }}>
-          <div style={{ width: 8, height: 8, background: "var(--accent-light)", borderRadius: "50%", flexShrink: 0 }} />
-          <span style={{
-            fontFamily: "'IBM Plex Mono'",
-            fontSize: 11,
-            letterSpacing: "0.18em",
-            color: "var(--paper)",
-            whiteSpace: "nowrap"
-          }}>TRUEFIT SKIM COAT · RECEIVABLES</span>
-          {auth.role === "admin" && (
-            <span style={{
-              fontFamily: "'IBM Plex Mono'",
-              fontSize: 9,
-              padding: "2px 7px",
-              borderRadius: 2,
-              background: "var(--accent)",
-              color: "var(--paper)",
-              letterSpacing: "0.08em"
-            }}>ADMIN</span>
+    <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", background: "var(--paper)", minHeight: "100vh", color: "var(--ink)" }}>
+
+      {/* Header — matches dispatch style */}
+      <div style={{ borderBottom: "1px solid var(--border)", padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "var(--card)", zIndex: 100, boxShadow: "0 1px 3px rgba(0,0,0,0.06)", flexWrap: "nowrap", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent-light)", flexShrink: 0 }} />
+          <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, letterSpacing: "0.12em", color: "var(--ink)", whiteSpace: "nowrap" }}>TRUEFIT SKIM COAT · RECEIVABLES</span>
+          {isAdmin && (
+            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, padding: "2px 6px", borderRadius: 3, background: "var(--accent-bg)", color: "var(--accent)", border: "1px solid var(--accent-light)" }}>ADMIN</span>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {auth.role === "salesman" && (
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--light)", letterSpacing: "0.02em" }}>
-              {auth.salesman.name}
-            </span>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          {!isAdmin && (
+            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: "var(--mid)", marginRight: 4 }}>{auth.salesman.name}</span>
           )}
-          <button onClick={logout} style={{
-            fontFamily: "'IBM Plex Mono'",
-            fontSize: 10,
-            padding: "6px 12px",
-            borderRadius: 2,
-            border: "1px solid rgba(255,255,255,0.2)",
-            background: "transparent",
-            color: "rgba(255,255,255,0.6)",
-            letterSpacing: "0.08em"
-          }}>EXIT</button>
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => setView(tab.id)}
+              style={{
+                fontFamily: "'IBM Plex Mono'",
+                fontSize: 12,
+                letterSpacing: "0.08em",
+                padding: "6px 10px",
+                borderRadius: 4,
+                border: "1px solid",
+                transition: "all 0.15s",
+                whiteSpace: "nowrap",
+                background: view === tab.id ? "var(--accent)" : "transparent",
+                borderColor: view === tab.id ? "var(--accent)" : "var(--border)",
+                color: view === tab.id ? "#ffffff" : "var(--ink)"
+              }}>
+              {tab.label}
+            </button>
+          ))}
+          <button onClick={logout}
+            style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, padding: "6px 8px", borderRadius: 4, border: "1px solid var(--border)", background: "transparent", color: "var(--mid)", whiteSpace: "nowrap" }}>
+            EXIT
+          </button>
         </div>
       </div>
 
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "28px 16px" }}>
-        {auth.role === "admin"
-          ? <AdminView salesmen={salesmen} onRefresh={fetchSalesmen} />
-          : <SalesmanView salesman={auth.salesman} />
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "24px 20px" }}>
+        {view === "dashboard"
+          ? isAdmin
+            ? <AdminView salesmen={salesmen} onRefresh={fetchSalesmen} />
+            : <SalesmanView salesman={auth.salesman} />
+          : <AdminView salesmen={salesmen} onRefresh={fetchSalesmen} />
         }
       </div>
     </div>

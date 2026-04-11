@@ -3,17 +3,21 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; color: inherit; }
 
 :root {
-  --ink: #1c1612;
-  --paper: #faf7f2;
-  --card: #fff8f0;
-  --border: #ddd5c8;
-  --border-light: #ede8e0;
-  --mid: #8a7d6e;
-  --light: #f0e8dc;
+  /* Layout — same as dispatch */
+  --ink: #111111;
+  --paper: #f0f2f5;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --mid: #888888;
+  --light: #f8fafc;
+  --faint: #fafbfc;
+
+  /* Earthy accents */
   --accent: #8b4513;
   --accent-light: #c4784a;
   --accent-bg: #fdf0e8;
-  --olive: #5c6b3a;
+  --olive: #3a5c2a;
   --olive-bg: #f0f4e8;
   --olive-border: #c8d4a8;
   --red: #8b1a1a;
@@ -36,12 +40,12 @@ html, body, #root {
 button { cursor: pointer; font-family: inherit; }
 input, select, textarea { outline: none; font-family: inherit; color: var(--ink); }
 
-::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--paper); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 2px; }
 
 .fade-in { animation: fadeIn 0.3s ease forwards; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
 
 .slide-in { animation: slideIn 0.2s ease forwards; }
-@keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
