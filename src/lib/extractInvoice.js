@@ -1,18 +1,18 @@
-// Extracts bill fields from a Tally invoice PDF
-// Calls our Vercel serverless proxy which forwards to Anthropic API
-
 export async function extractInvoiceFromPDF(file) {
   const base64 = await fileToBase64(file);
 
-  let response;
-  try {
-    response = await fetch("/api/extract-invoice", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 300,
-        system: `You are extracting fields from a Tally-generated tax invoice PDF for Truefit Skim Coat Products / Padmavathi Agencies.
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 300,
+      system: `You are extracting fields from a Tally-generated tax invoice PDF for Truefit Skim Coat Products / Padmavathi Agencies.
 Extract exactly these fields and return ONLY valid JSON, no other text:
 {
   "bill_no": "e.g. PA/26-27/060 or TF/26-27/123",
@@ -23,23 +23,20 @@ Extract exactly these fields and return ONLY valid JSON, no other text:
 The amount is the final bill total (from the New Ref line or Total line, inclusive of GST).
 The bill_no starts with PA/ or TF/.
 Return ONLY the JSON object, nothing else.`,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "document",
-                source: { type: "base64", media_type: "application/pdf", data: base64 }
-              },
-              { type: "text", text: "Extract the invoice fields from this PDF." }
-            ]
-          }
-        ]
-      })
-    });
-  } catch (fetchErr) {
-    throw new Error("Network error: " + fetchErr.message);
-  }
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: { type: "base64", media_type: "application/pdf", data: base64 }
+            },
+            { type: "text", text: "Extract the invoice fields from this PDF." }
+          ]
+        }
+      ]
+    })
+  });
 
   const data = await response.json();
 
