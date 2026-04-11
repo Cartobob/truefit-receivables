@@ -69,7 +69,7 @@ export default function SalesmanView({ salesman }) {
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => generateAgeingReport(salesman.name, dealers)} style={{
             padding: "6px 12px", fontSize: 12, borderRadius: 6,
-            border: "1px solid var(--border)", background: "#111111", color: "#ffffff",
+            border: "1px solid var(--border)", background: "#8b4513", color: "#ffffff",
             fontFamily: "'IBM Plex Mono'", letterSpacing: "0.08em"
           }}>⬇ Report</button>
           <button onClick={fetchDealers} style={{ padding: "6px 12px", fontSize: 13, borderRadius: 6, border: "1px solid #dddbe8", background: "#ffffff", color: "#888888" }}>&#8635;</button>
@@ -100,7 +100,7 @@ export default function SalesmanView({ salesman }) {
       <div style={{ position: "relative", marginBottom: 16 }}>
         <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 15, color: "#aaa" }}>🔍</span>
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dealer name..."
-          style={{ width: "100%", padding: "10px 12px 10px 34px", border: "1px solid #dddbe8", borderRadius: 10, fontSize: 15, background: "#ffffff", color: "#111111", outline: "none" }} />
+          style={{ width: "100%", padding: "10px 12px 10px 34px", border: "1px solid #dddbe8", borderRadius: 10, fontSize: 15, background: "#ffffff", color: "#8b4513", outline: "none" }} />
         {search && <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer", fontSize: 15, color: "#aaa" }}>✕</button>}
       </div>
 
@@ -123,11 +123,11 @@ export default function SalesmanView({ salesman }) {
                 <div style={{ padding: "14px 16px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 500, color: "#111111", marginBottom: 2 }}>{dealer.name}</div>
+                      <div style={{ fontSize: 15, fontWeight: 500, color: "#8b4513", marginBottom: 2 }}>{dealer.name}</div>
                       {dealer.area && <div style={{ fontSize: 13, color: "#888888" }}>{dealer.area}</div>}
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 500, color: "#111111" }}>{fmt(bal)}</div>
+                      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{fmt(bal)}</div>
                       <span style={{ fontSize: 13, padding: "2px 8px", borderRadius: 6, background: bucket.bg, color: bucket.color, border: "1px solid " + bucket.border }}>{bucket.label}</span>
                     </div>
                   </div>
@@ -155,7 +155,7 @@ export default function SalesmanView({ salesman }) {
                   )}
 
                   <button onClick={() => toggle(dealer.id)}
-                    style={{ padding: "6px 12px", fontSize: 13, borderRadius: 6, border: "1px solid #dddbe8", background: "#f0f2f5", color: "#111111" }}>
+                    style={{ padding: "6px 12px", fontSize: 13, borderRadius: 6, border: "1px solid #dddbe8", background: "#f0f2f5", color: "#8b4513" }}>
                     {dealer.bills.length} bill{dealer.bills.length !== 1 ? "s" : ""} {isOpen ? "▲" : "▼"}
                   </button>
                 </div>
@@ -168,7 +168,7 @@ export default function SalesmanView({ salesman }) {
                       return (
                         <div key={bill.id} style={{ padding: "10px 16px 10px 40px", borderBottom: idx < dealer.bills.length - 1 ? "1px solid #f0eef8" : "none", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", flexWrap: "wrap", gap: 6 }}>
                           <div>
-                            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#111111" }}>
+                            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#8b4513" }}>
                               {bill.bill_no}
                               {bill.pdf_path && (
                                 <button onClick={() => viewPDF(bill)} style={{ marginLeft: 8, background: "none", border: "none", cursor: "pointer", fontSize: 13 }} title="View Bill PDF">📄</button>
@@ -177,7 +177,7 @@ export default function SalesmanView({ salesman }) {
                             <div style={{ fontSize: 13, color: "#888888" }}>{fmtDate(bill.bill_date)}</div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 500, color: "#111111" }}>{fmt(bill.balance)}</span>
+                            <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 500, color: "#8b4513" }}>{fmt(bill.balance)}</span>
                             <span style={{ fontSize: 13, padding: "2px 7px", borderRadius: 6, background: bkt.bg, color: bkt.color, border: "1px solid " + bkt.border }}>{days}d</span>
                           </div>
                         </div>

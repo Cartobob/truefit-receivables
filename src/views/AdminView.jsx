@@ -239,8 +239,8 @@ export default function AdminView({ salesmen, onRefresh }) {
 
   // ── Styles ──
   const card = { background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" };
-  const inp = { background: "#f8fafc", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px", fontSize: 15, color: "#111111", width: "100%" };
-  const btnP = { padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "none", background: "#111111", color: "#ffffff", letterSpacing: "0.06em", cursor: "pointer" };
+  const inp = { background: "#f8fafc", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px", fontSize: 15, color: "#8b4513", width: "100%" };
+  const btnP = { padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "none", background: "#8b4513", color: "#ffffff", letterSpacing: "0.06em", cursor: "pointer" };
   const btnG = { padding: "7px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "1px solid #e2e8f0", background: "#ffffff", color: "#888", cursor: "pointer" };
   const btnAmber = { padding: "4px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 5, border: "1px solid #d4a820", background: "#fffbeb", color: "#92640a", cursor: "pointer" };
   const btnGreen = { padding: "4px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 5, border: "1px solid #86c896", background: "#f0faf0", color: "var(--olive)", cursor: "pointer" };
@@ -274,7 +274,7 @@ export default function AdminView({ salesmen, onRefresh }) {
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => generateAgeingReport("All Salesmen", allDealers)} style={{
             padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 12, borderRadius: 6,
-            border: "1px solid var(--border)", background: "#ffffff", color: "#111111",
+            border: "1px solid var(--border)", background: "#ffffff", color: "#8b4513",
             letterSpacing: "0.08em", cursor: "pointer"
           }}>⬇ Full Report</button>
           <button onClick={fetchAll} style={btnG}>&#8635; Refresh</button>
@@ -315,7 +315,7 @@ export default function AdminView({ salesmen, onRefresh }) {
           <div style={{ position: "relative" }}>
             <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 15, color: "#aaa" }}>🔍</span>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dealer name..."
-              style={{ width: "100%", padding: "10px 12px 10px 34px", border: "1px solid #dddbe8", borderRadius: 10, fontSize: 15, background: "#ffffff", color: "#111111", outline: "none" }} />
+              style={{ width: "100%", padding: "10px 12px 10px 34px", border: "1px solid #dddbe8", borderRadius: 10, fontSize: 15, background: "#ffffff", color: "#8b4513", outline: "none" }} />
             {search && <button onClick={() => setSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", border: "none", background: "none", cursor: "pointer", fontSize: 15, color: "#aaa" }}>✕</button>}
           </div>
 
@@ -329,11 +329,11 @@ export default function AdminView({ salesmen, onRefresh }) {
             return (
               <div key={sm.id} className="fade-in" style={{ ...card, overflow: "hidden", animationDelay: i * 40 + "ms" }}>
                 <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", cursor: "pointer" }} onClick={() => toggle(sm.id)}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 500, color: "#111111", flexShrink: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 500, color: "#8b4513", flexShrink: 0 }}>
                     {sm.name.charAt(0).toUpperCase()}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 500, color: "#111111" }}>{sm.name}</div>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{sm.name}</div>
                     <div style={{ fontSize: 13, color: "#888888" }}>
                       {filteredDealers.length} dealer{filteredDealers.length !== 1 ? "s" : ""}
                       {smCheque > 0 && <span style={{ marginLeft: 8, color: "#92640a" }}>· 🟡 {fmt(smCheque)} CHQ</span>}
@@ -381,7 +381,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                         <div key={dealer.id} style={{ borderBottom: di < filteredDealers.length - 1 ? "1px solid #f0eef8" : "none", borderLeft: "3px solid " + sc }}>
                           <div style={{ padding: "12px 16px 12px 20px", display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 15, fontWeight: 500, color: "#111111" }}>{dealer.name}</div>
+                              <div style={{ fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{dealer.name}</div>
                               {dealer.area && <div style={{ fontSize: 13, color: "#888888" }}>{dealer.area}</div>}
 
                               {pending.length > 0 && (
@@ -420,7 +420,7 @@ export default function AdminView({ salesmen, onRefresh }) {
 
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                               <div style={{ textAlign: "right" }}>
-                                <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 500, color: "#111111" }}>{fmt(bal)}</span>
+                                <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{fmt(bal)}</span>
                                 {bal > 0 && <div><span style={{ fontSize: 13, padding: "2px 7px", borderRadius: 6, background: bucket.bg, color: bucket.color, border: "1px solid " + bucket.border }}>{bucket.label}</span></div>}
                               </div>
                               <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -475,7 +475,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                                 {!pendingPDF && <div style={{ fontSize: 13, color: "#888888" }}>📄 Upload Tally Invoice PDF to auto-fill fields</div>}
                                 {pendingPDF?.extracting && <div style={{ fontSize: 13, color: "var(--accent)", fontFamily: "'IBM Plex Mono'" }}>⏳ Extracting fields...</div>}
                                 {pendingPDF?.file && !pendingPDF.extracting && (
-                                  <div style={{ fontSize: 13, color: "#111111" }}>
+                                  <div style={{ fontSize: 13, color: "#8b4513" }}>
                                     📄 {pendingPDF.file.name}
                                     {pendingPDF.error && <div style={{ color: "#dc2626", marginTop: 4 }}>{pendingPDF.error}</div>}
                                     {!pendingPDF.error && <div style={{ color: "#2d6a2d", marginTop: 2 }}>✓ Fields extracted — check and save</div>}
@@ -503,7 +503,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                                 return (
                                   <div key={bill.id} style={{ padding: "8px 16px 8px 36px", borderTop: "1px solid #f0eef8", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
                                     <div>
-                                      <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#111111" }}>{bill.bill_no}</span>
+                                      <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#8b4513" }}>{bill.bill_no}</span>
                                       <span style={{ fontSize: 13, color: "#888888", marginLeft: 8 }}>{fmtDate(bill.bill_date)}</span>
                                       {bill.pdf_path && (
                                         <button onClick={() => viewPDF(bill)} style={{ marginLeft: 8, background: "none", border: "none", cursor: "pointer", fontSize: 13 }} title="View PDF">📄</button>
