@@ -1,23 +1,14 @@
-// Extracts bill fields from a Tally invoice PDF using the Anthropic API
-// Returns { bill_no, bill_date, amount, buyer } or throws on failure
+// Extracts bill fields from a Tally invoice PDF
+// Calls our Vercel serverless proxy which forwards to Anthropic API
 
 export async function extractInvoiceFromPDF(file) {
   const base64 = await fileToBase64(file);
 
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-  console.log("API key present:", !!apiKey);
-  console.log("API key prefix:", apiKey?.slice(0, 15));
-
   let response;
   try {
-    response = await fetch("https://api.anthropic.com/v1/messages", {
+    response = await fetch("/api/extract-invoice", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 300,
@@ -29,7 +20,7 @@ Extract exactly these fields and return ONLY valid JSON, no other text:
   "amount": 15800.00,
   "buyer": "buyer name as written"
 }
-The amount is the final bill total (from the 'New Ref' line or 'Total' line, inclusive of GST).
+The amount is the final bill total (from the New Ref line or Total line, inclusive of GST).
 The bill_no starts with PA/ or TF/.
 Return ONLY the JSON object, nothing else.`,
         messages: [
@@ -47,13 +38,10 @@ Return ONLY the JSON object, nothing else.`,
       })
     });
   } catch (fetchErr) {
-    console.error("Fetch failed:", fetchErr);
     throw new Error("Network error: " + fetchErr.message);
   }
 
-  console.log("Response status:", response.status);
   const data = await response.json();
-  console.log("Response body:", JSON.stringify(data).slice(0, 300));
 
   if (!response.ok) {
     throw new Error(`API error ${response.status}: ${data.error?.message || JSON.stringify(data)}`);
