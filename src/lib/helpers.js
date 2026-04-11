@@ -6,9 +6,9 @@ export const ageDays = (dateStr) => {
 };
 
 export const ageBucket = (days) => {
-  if (days <= 30) return { label: "0-30 days", color: "#1a5c1a", bg: "#d4f0d4", border: "#a8dca8" };
-  if (days <= 60) return { label: "31-60 days", color: "#7a3d00", bg: "#fde8d0", border: "#f0c090" };
-  return { label: "60+ days", color: "#7a1a1a", bg: "#fdd8d8", border: "#f0a0a0" };
+  if (days <= 30) return { label: "0-30 days", color: "#3a5c2a", bg: "#edf4e4", border: "#c0d4a8" };
+  if (days <= 60) return { label: "31-60 days", color: "#7a5200", bg: "#fdf4e0", border: "#e8d090" };
+  return { label: "60+ days", color: "#8b1a1a", bg: "#fdf0f0", border: "#e8c0b0" };
 };
 
 export const worstBucket = (bills) => {
@@ -26,9 +26,9 @@ export const totalBalance = (bills) => {
 
 export const stripColor = (bills) => {
   const bucket = worstBucket(bills);
-  if (bucket.label === "0-30 days") return "#5cb87c";
-  if (bucket.label === "31-60 days") return "#f0b870";
-  return "#e87878";
+  if (bucket.label === "0-30 days") return "#6b9a4a";
+  if (bucket.label === "31-60 days") return "#c8943a";
+  return "#b84040";
 };
 
 export const pendingCheques = (cheques) => {

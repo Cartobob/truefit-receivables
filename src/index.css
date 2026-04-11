@@ -1,11 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; color: inherit; }
-html, body, #root { height: 100%; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; color: #2d2d3d; background: #f4f3f8; -webkit-font-smoothing: antialiased; }
-button { cursor: pointer; font-family: inherit; color: inherit; }
-input, select, textarea { outline: none; font-family: inherit; color: #2d2d3d; }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #f4f3f8; }
-::-webkit-scrollbar-thumb { background: #c8c4e0; border-radius: 2px; }
+
+:root {
+  --ink: #1c1612;
+  --paper: #faf7f2;
+  --card: #fff8f0;
+  --border: #ddd5c8;
+  --border-light: #ede8e0;
+  --mid: #8a7d6e;
+  --light: #f0e8dc;
+  --accent: #8b4513;
+  --accent-light: #c4784a;
+  --accent-bg: #fdf0e8;
+  --olive: #5c6b3a;
+  --olive-bg: #f0f4e8;
+  --olive-border: #c8d4a8;
+  --red: #8b1a1a;
+  --red-bg: #fdf0f0;
+  --red-border: #e8c0c0;
+  --amber: #7a5200;
+  --amber-bg: #fdf8e8;
+  --amber-border: #e8d898;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { outline: none; font-family: inherit; color: var(--ink); }
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
 .fade-in { animation: fadeIn 0.3s ease forwards; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
 .slide-in { animation: slideIn 0.2s ease forwards; }
-@keyframes slideIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
