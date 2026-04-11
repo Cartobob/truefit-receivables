@@ -51,7 +51,7 @@ export default function App() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0" }}>
           <div style={{ width: 8, height: 8, background: "var(--accent-light)", borderRadius: "50%", flexShrink: 0 }} />
           <span style={{
-            fontFamily: "'DM Mono'",
+            fontFamily: "'IBM Plex Mono'",
             fontSize: 11,
             letterSpacing: "0.18em",
             color: "var(--paper)",
@@ -59,7 +59,7 @@ export default function App() {
           }}>TRUEFIT SKIM COAT · RECEIVABLES</span>
           {auth.role === "admin" && (
             <span style={{
-              fontFamily: "'DM Mono'",
+              fontFamily: "'IBM Plex Mono'",
               fontSize: 9,
               padding: "2px 7px",
               borderRadius: 2,
@@ -76,7 +76,7 @@ export default function App() {
             </span>
           )}
           <button onClick={logout} style={{
-            fontFamily: "'DM Mono'",
+            fontFamily: "'IBM Plex Mono'",
             fontSize: 10,
             padding: "6px 12px",
             borderRadius: 2,

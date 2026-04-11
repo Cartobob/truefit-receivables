@@ -37,7 +37,7 @@ export default function Login({ salesmen, adminPin, onLogin }) {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      fontFamily: "'DM Sans', sans-serif"
+      fontFamily: "'IBM Plex Sans', sans-serif"
     }}>
       <div style={{ width: 340 }}>
 
@@ -52,7 +52,7 @@ export default function Login({ salesmen, adminPin, onLogin }) {
             marginBottom: 4
           }}>Truefit</div>
           <div style={{
-            fontFamily: "'DM Mono'",
+            fontFamily: "'IBM Plex Mono'",
             fontSize: 10,
             letterSpacing: "0.22em",
             color: "var(--mid)",
@@ -82,7 +82,7 @@ export default function Login({ salesmen, adminPin, onLogin }) {
                 style={{
                   flex: 1,
                   padding: "9px 0",
-                  fontFamily: "'DM Mono'",
+                  fontFamily: "'IBM Plex Mono'",
                   fontSize: 10,
                   letterSpacing: "0.12em",
                   border: "none",
@@ -96,7 +96,7 @@ export default function Login({ salesmen, adminPin, onLogin }) {
 
           {mode === "salesman" && (
             <>
-              <div style={{ fontFamily: "'DM Mono'", fontSize: 9, letterSpacing: "0.14em", color: "var(--mid)", marginBottom: 6 }}>YOUR NAME</div>
+              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.14em", color: "var(--mid)", marginBottom: 6 }}>YOUR NAME</div>
               <select value={selectedId} onChange={e => setSelectedId(e.target.value)} style={{ ...inp }}>
                 <option value="">— Select —</option>
                 {salesmen.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -104,7 +104,7 @@ export default function Login({ salesmen, adminPin, onLogin }) {
             </>
           )}
 
-          <div style={{ fontFamily: "'DM Mono'", fontSize: 9, letterSpacing: "0.14em", color: "var(--mid)", marginBottom: 6 }}>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.14em", color: "var(--mid)", marginBottom: 6 }}>
             {mode === "salesman" ? "PASSWORD" : "ADMIN PIN"}
           </div>
           <input
@@ -117,7 +117,7 @@ export default function Login({ salesmen, adminPin, onLogin }) {
           />
 
           {error && (
-            <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 12, fontFamily: "'DM Mono'" }}>{error}</div>
+            <div style={{ fontSize: 12, color: "var(--red)", marginBottom: 12, fontFamily: "'IBM Plex Mono'" }}>{error}</div>
           )}
 
           <button onClick={handleLogin} style={{
@@ -128,7 +128,7 @@ export default function Login({ salesmen, adminPin, onLogin }) {
             borderRadius: 4,
             color: "var(--paper)",
             fontSize: 11,
-            fontFamily: "'DM Mono'",
+            fontFamily: "'IBM Plex Mono'",
             letterSpacing: "0.14em",
             transition: "background 0.15s"
           }}

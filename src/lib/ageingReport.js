@@ -72,7 +72,7 @@ export function generateAgeingReport(salesman, dealers, allBills = false) {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=DM+Mono&family=DM+Sans:wght@400;500;600&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; color: #1c1612; background: #fff; padding: 32px 40px; font-size: 14px; }
+    body { font-family: 'IBM Plex Sans', sans-serif; color: #1c1612; background: #fff; padding: 32px 40px; font-size: 14px; }
     @media print {
       body { padding: 16px 24px; }
       @page { margin: 16mm; size: A4; }
@@ -87,11 +87,11 @@ export function generateAgeingReport(salesman, dealers, allBills = false) {
   <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1c1612;padding-bottom:16px;margin-bottom:24px;">
     <div>
       <div style="font-family:'Playfair Display';font-size:26px;font-weight:500;color:#1c1612;margin-bottom:2px;">Truefit Skim Coat Products</div>
-      <div style="font-family:'DM Mono';font-size:10px;letter-spacing:0.18em;color:#8a7d6e;">DEBTORS AGEING REPORT</div>
+      <div style="font-family:'IBM Plex Mono';font-size:10px;letter-spacing:0.18em;color:#8a7d6e;">DEBTORS AGEING REPORT</div>
     </div>
     <div style="text-align:right;">
       <div style="font-size:13px;font-weight:600;color:#1c1612;">${salesman}</div>
-      <div style="font-family:'DM Mono';font-size:10px;color:#8a7d6e;margin-top:2px;">As on ${today}</div>
+      <div style="font-family:'IBM Plex Mono';font-size:10px;color:#8a7d6e;margin-top:2px;">As on ${today}</div>
     </div>
   </div>
 
@@ -105,13 +105,13 @@ export function generateAgeingReport(salesman, dealers, allBills = false) {
       { label: "60+ DAYS", val: fmt(b60p), color: "#8b1a1a" },
     ].map(s => `
       <div style="border:1px solid #ddd5c8;border-radius:6px;padding:12px 14px;background:#faf7f2;">
-        <div style="font-family:'DM Mono';font-size:8px;letter-spacing:0.12em;color:#8a7d6e;margin-bottom:4px;">${s.label}</div>
-        <div style="font-family:'DM Mono';font-size:14px;font-weight:500;color:${s.color};">${s.val}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:8px;letter-spacing:0.12em;color:#8a7d6e;margin-bottom:4px;">${s.label}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:14px;font-weight:500;color:${s.color};">${s.val}</div>
       </div>`).join("")}
   </div>
 
   <!-- Dealer detail -->
-  <div style="font-family:'DM Mono';font-size:9px;letter-spacing:0.14em;color:#8a7d6e;margin-bottom:14px;border-bottom:1px solid #ddd5c8;padding-bottom:6px;">
+  <div style="font-family:'IBM Plex Mono';font-size:9px;letter-spacing:0.14em;color:#8a7d6e;margin-bottom:14px;border-bottom:1px solid #ddd5c8;padding-bottom:6px;">
     DEALER-WISE DETAIL · ${activeDealers.length} DEALERS
   </div>
 
@@ -119,8 +119,8 @@ export function generateAgeingReport(salesman, dealers, allBills = false) {
 
   <!-- Footer -->
   <div style="margin-top:32px;border-top:1px solid #ddd5c8;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
-    <div style="font-family:'DM Mono';font-size:9px;color:#aaa;letter-spacing:0.1em;">TRUEFIT SKIM COAT PRODUCTS · 25/1 AUT NAGAR, TIRUVANAIKOIL, TRICHY 620005</div>
-    <div style="font-family:'DM Mono';font-size:9px;color:#aaa;">Generated ${today}</div>
+    <div style="font-family:'IBM Plex Mono';font-size:9px;color:#aaa;letter-spacing:0.1em;">TRUEFIT SKIM COAT PRODUCTS · 25/1 AUT NAGAR, TIRUVANAIKOIL, TRICHY 620005</div>
+    <div style="font-family:'IBM Plex Mono';font-size:9px;color:#aaa;">Generated ${today}</div>
   </div>
 
 </body>
