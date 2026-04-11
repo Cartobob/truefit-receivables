@@ -2,21 +2,26 @@
 // Returns { bill_no, bill_date, amount, buyer } or throws on failure
 
 export async function extractInvoiceFromPDF(file) {
-  // Convert PDF file to base64
   const base64 = await fileToBase64(file);
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 300,
-      system: `You are extracting fields from a Tally-generated tax invoice PDF for Truefit Skim Coat Products / Padmavathi Agencies.
+  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+  console.log("API key present:", !!apiKey);
+  console.log("API key prefix:", apiKey?.slice(0, 15));
+
+  let response;
+  try {
+    response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 300,
+        system: `You are extracting fields from a Tally-generated tax invoice PDF for Truefit Skim Coat Products / Padmavathi Agencies.
 Extract exactly these fields and return ONLY valid JSON, no other text:
 {
   "bill_no": "e.g. PA/26-27/060 or TF/26-27/123",
@@ -27,27 +32,37 @@ Extract exactly these fields and return ONLY valid JSON, no other text:
 The amount is the final bill total (from the 'New Ref' line or 'Total' line, inclusive of GST).
 The bill_no starts with PA/ or TF/.
 Return ONLY the JSON object, nothing else.`,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "document",
-              source: { type: "base64", media_type: "application/pdf", data: base64 }
-            },
-            { type: "text", text: "Extract the invoice fields from this PDF." }
-          ]
-        }
-      ]
-    })
-  });
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "document",
+                source: { type: "base64", media_type: "application/pdf", data: base64 }
+              },
+              { type: "text", text: "Extract the invoice fields from this PDF." }
+            ]
+          }
+        ]
+      })
+    });
+  } catch (fetchErr) {
+    console.error("Fetch failed:", fetchErr);
+    throw new Error("Network error: " + fetchErr.message);
+  }
 
+  console.log("Response status:", response.status);
   const data = await response.json();
+  console.log("Response body:", JSON.stringify(data).slice(0, 300));
+
+  if (!response.ok) {
+    throw new Error(`API error ${response.status}: ${data.error?.message || JSON.stringify(data)}`);
+  }
+
   const text = data.content?.find(b => b.type === "text")?.text || "";
 
   try {
     const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
-    // Validate required fields
     if (!parsed.bill_no || !parsed.amount) throw new Error("Missing required fields");
     return parsed;
   } catch {
