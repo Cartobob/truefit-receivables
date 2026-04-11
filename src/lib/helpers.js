@@ -30,3 +30,16 @@ export const stripColor = (bills) => {
   if (bucket.label === "31-60 days") return "#f0b870";
   return "#e87878";
 };
+
+export const pendingCheques = (cheques) => {
+  if (!cheques) return [];
+  return cheques.filter(c => c.status === "pending");
+};
+
+export const totalPendingCheques = (cheques) => {
+  return pendingCheques(cheques).reduce((s, c) => s + Number(c.amount), 0);
+};
+
+export const fmtDate = (dateStr) => {
+  return new Date(dateStr).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+};
