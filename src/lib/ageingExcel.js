@@ -1,6 +1,3 @@
-// Generates a Tally-style two-column ageing report Excel file
-// Left: PA bills, Right: TF bills
-
 export async function generateAgeingExcel(salesmanName, dealers) {
   if (!window.XLSX) {
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
@@ -22,11 +19,10 @@ export async function generateAgeingExcel(salesmanName, dealers) {
   const allDealerNames = [...new Set([...Object.keys(paDealers), ...Object.keys(tfDealers)])].sort();
   const rows = [];
 
-  // Header rows
-  rows.push([
-    `${salesmanName}-Padmavathi Agencies Ageing as on ${today}`, "", "", "", "",
-    `${salesmanName}-TRUEFIT-ESHAN Ageing as on ${today}`, "", "", "", ""
-  ]);
+  const paHeader = `${salesmanName}-Padmavathi Agencies Ageing as on ${today}`;
+  const tfHeader = `${salesmanName}-TRUEFIT-ESHAN Ageing as on ${today}`;
+
+  rows.push([paHeader, "", "", "", "", tfHeader, "", "", "", ""]);
   rows.push(["Date", "Details", "Opening", "Pending", "Due", "Date", "Details", "Opening", "Pending", "Due"]);
 
   const fmtDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" });
@@ -36,10 +32,8 @@ export async function generateAgeingExcel(salesmanName, dealers) {
     const tfB = tfDealers[dealer] || [];
     if (paB.length === 0 && tfB.length === 0) continue;
 
-    // Dealer name row
     rows.push(["", dealer, "", "", "", "", tfB.length > 0 ? dealer : "", "", "", ""]);
 
-    // Bill rows
     const maxRows = Math.max(paB.length, tfB.length);
     for (let i = 0; i < maxRows; i++) {
       const pb = paB[i];
@@ -58,7 +52,6 @@ export async function generateAgeingExcel(salesmanName, dealers) {
       ]);
     }
 
-    // Subtotal row — no blank spacer row after
     const paTotal   = paB.reduce((s, b) => s + Number(b.amount), 0);
     const paPending = paB.reduce((s, b) => s + Number(b.balance), 0);
     const tfTotal   = tfB.reduce((s, b) => s + Number(b.amount), 0);
@@ -66,7 +59,6 @@ export async function generateAgeingExcel(salesmanName, dealers) {
     rows.push(["", "", paTotal || "", paPending || "", "", "", "", tfTotal || "", tfPending || "", ""]);
   }
 
-  // Grand totals
   const grandPaAmt  = Object.values(paDealers).flat().reduce((s, b) => s + Number(b.amount), 0);
   const grandPaPend = Object.values(paDealers).flat().reduce((s, b) => s + Number(b.balance), 0);
   const grandTfAmt  = Object.values(tfDealers).flat().reduce((s, b) => s + Number(b.amount), 0);
@@ -76,15 +68,35 @@ export async function generateAgeingExcel(salesmanName, dealers) {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
 
-  // Auto-fit column widths based on content
+  // Auto-fit column widths
   const colWidths = Array(10).fill(0);
   for (const row of rows) {
     row.forEach((cell, i) => {
-      const len = cell ? String(cell).length : 0;
+      const len = cell !== null && cell !== undefined ? String(cell).length : 0;
       if (len > colWidths[i]) colWidths[i] = len;
     });
   }
-  ws["!cols"] = colWidths.map(w => ({ wch: Math.min(Math.max(w + 2, 8), 40) }));
+  ws["!cols"] = colWidths.map(w => ({ wch: Math.min(Math.max(w + 1, 8), 50) }));
+
+  // Borders: thick for columns (left/right), thin for rows (top/bottom)
+  const thick = { style: "medium", color: { rgb: "888888" } };
+  const thin  = { style: "thin",   color: { rgb: "CCCCCC" } };
+
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+  for (let R = range.s.r; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const addr = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[addr]) ws[addr] = { v: "", t: "s" };
+      ws[addr].s = {
+        border: {
+          left:   thick,
+          right:  thick,
+          top:    thin,
+          bottom: thin,
+        }
+      };
+    }
+  }
 
   XLSX.utils.book_append_sheet(wb, ws, salesmanName.substring(0, 31));
 
