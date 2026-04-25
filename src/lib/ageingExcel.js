@@ -1,6 +1,7 @@
 export async function generateAgeingExcel(salesmanName, dealers) {
+  try {
   if (!window.XLSXStyle) {
-    await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
+    await loadScript("https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
   }
 
   const XLSX = window.XLSXStyle;
@@ -97,6 +98,10 @@ export async function generateAgeingExcel(salesmanName, dealers) {
 
   const filename = `${salesmanName.replace(/\s+/g, "_")}_Ageing_${today.replace(/\//g, "-")}.xlsx`;
   XLSX.writeFile(wb, filename);
+  } catch(e) {
+    alert("Excel export failed: " + e.message);
+    console.error(e);
+  }
 }
 
 function loadScript(src) {
