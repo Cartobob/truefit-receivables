@@ -1,9 +1,9 @@
 export async function generateAgeingExcel(salesmanName, dealers) {
-  if (!window.XLSX) {
-    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
+  if (!window.XLSXStyle) {
+    await loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
   }
 
-  const XLSX = window.XLSX;
+  const XLSX = window.XLSXStyle;
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   const paDealers = {};
@@ -19,8 +19,9 @@ export async function generateAgeingExcel(salesmanName, dealers) {
   const allDealerNames = [...new Set([...Object.keys(paDealers), ...Object.keys(tfDealers)])].sort();
   const rows = [];
 
-  const paHeader = `${salesmanName}-Padmavathi Agencies Ageing as on ${today}`;
-  const tfHeader = `${salesmanName}-TRUEFIT-ESHAN Ageing as on ${today}`;
+  const monthYear = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  const paHeader = `Padmavathi Agencies - ${monthYear}`;
+  const tfHeader = `Truefit / Eshan - ${monthYear}`;
 
   rows.push([paHeader, "", "", "", "", tfHeader, "", "", "", ""]);
   rows.push(["Date", "Details", "Opening", "Pending", "Due", "Date", "Details", "Opening", "Pending", "Due"]);
@@ -68,35 +69,28 @@ export async function generateAgeingExcel(salesmanName, dealers) {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
 
-  // Auto-fit column widths
+  // Auto-fit based on data rows only (skip header row for width calc)
   const colWidths = Array(10).fill(0);
-  for (const row of rows) {
-    row.forEach((cell, i) => {
+  for (let i = 1; i < rows.length; i++) {  // start from row index 1, skip header
+    rows[i].forEach((cell, c) => {
       const len = cell !== null && cell !== undefined ? String(cell).length : 0;
-      if (len > colWidths[i]) colWidths[i] = len;
+      if (len > colWidths[c]) colWidths[c] = len;
     });
   }
-  ws["!cols"] = colWidths.map(w => ({ wch: Math.min(Math.max(w + 1, 8), 50) }));
 
-  // Borders: thick for columns (left/right), thin for rows (top/bottom)
-  const thick = { style: "medium", color: { rgb: "888888" } };
-  const thin  = { style: "thin",   color: { rgb: "CCCCCC" } };
-
-  const range = XLSX.utils.decode_range(ws["!ref"]);
-  for (let R = range.s.r; R <= range.e.r; R++) {
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const addr = XLSX.utils.encode_cell({ r: R, c: C });
-      if (!ws[addr]) ws[addr] = { v: "", t: "s" };
-      ws[addr].s = {
-        border: {
-          left:   thick,
-          right:  thick,
-          top:    thin,
-          bottom: thin,
-        }
-      };
-    }
-  }
+  // Fixed widths per column type: date, details, amount, amount, days
+  ws["!cols"] = [
+    { wch: Math.max(colWidths[0] + 1, 10) },  // date
+    { wch: Math.max(colWidths[1] + 1, 20) },  // details (bill no / dealer)
+    { wch: Math.max(colWidths[2] + 1, 10) },  // opening
+    { wch: Math.max(colWidths[3] + 1, 10) },  // pending
+    { wch: Math.max(colWidths[4] + 1, 5)  },  // due days
+    { wch: Math.max(colWidths[5] + 1, 10) },  // date TF
+    { wch: Math.max(colWidths[6] + 1, 20) },  // details TF
+    { wch: Math.max(colWidths[7] + 1, 10) },  // opening TF
+    { wch: Math.max(colWidths[8] + 1, 10) },  // pending TF
+    { wch: Math.max(colWidths[9] + 1, 5)  },  // due days TF
+  ];
 
   XLSX.utils.book_append_sheet(wb, ws, salesmanName.substring(0, 31));
 
@@ -107,10 +101,4 @@ export async function generateAgeingExcel(salesmanName, dealers) {
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
+    con
