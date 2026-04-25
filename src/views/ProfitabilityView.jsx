@@ -31,15 +31,22 @@ export default function ProfitabilityView({ salesmen }) {
     const end = monthEnd(selectedMonth);
 
     // Bills raised this month (sales)
+    const { data: allDealers } = await supabase
+      .from("dealers")
+      .select("id, salesman_id");
+
+    const dealerToSalesman = {};
+    (allDealers || []).forEach(d => { dealerToSalesman[d.id] = d.salesman_id; });
+
     const { data: bills } = await supabase
       .from("bills")
-      .select("dealer_id, amount, bill_date, dealers(salesman_id)")
+      .select("dealer_id, amount, bill_date")
       .gte("bill_date", start).lte("bill_date", end);
 
     // Payments received this month (collections)
     const { data: payments } = await supabase
       .from("payments")
-      .select("dealer_id, amount, payment_date, dealers(salesman_id)")
+      .select("dealer_id, amount, payment_date")
       .gte("payment_date", start).lte("payment_date", end);
 
     // Salary this month
@@ -56,8 +63,8 @@ export default function ProfitabilityView({ salesmen }) {
 
     // Combine per salesman
     const rows = salesmen.map(sm => {
-      const smBills    = (bills    || []).filter(b => b.dealers?.salesman_id === sm.id);
-      const smPayments = (payments || []).filter(p => p.dealers?.salesman_id === sm.id);
+      const smBills    = (bills    || []).filter(b => dealerToSalesman[b.dealer_id] === sm.id);
+      const smPayments = (payments || []).filter(p => dealerToSalesman[p.dealer_id] === sm.id);
       const smSalary   = (salaries || []).find(s => s.salesman_id === sm.id);
       const smExpenses = (expenses || []).filter(e => e.salesman_id === sm.id);
 
