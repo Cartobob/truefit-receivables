@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { fmt, fmtDate, ageDays, ageBucket, worstBucket, totalBalance, stripColor, pendingCheques, totalPendingCheques } from "../lib/helpers";
 import { getBillPDFUrl } from "../lib/pdfStorage";
 import { generateAgeingReport } from "../lib/ageingReport";
+import { generateAgeingExcel } from "../lib/ageingExcel";
 
 export default function SalesmanView({ salesman }) {
   const [dealers, setDealers] = useState([]);
@@ -125,7 +126,12 @@ export default function SalesmanView({ salesman }) {
             padding: "6px 12px", fontSize: 12, borderRadius: 4,
             border: "1px solid #e2e8f0", background: "#6b2f0a", color: "#ffffff",
             fontFamily: "'IBM Plex Mono'", letterSpacing: "0.08em"
-          }}>⬇ Report</button>
+          }}>⬇ PDF</button>
+          <button onClick={() => generateAgeingExcel(salesman.name, dealers)} style={{
+            padding: "6px 12px", fontSize: 12, borderRadius: 4,
+            border: "1px solid #6b2f0a", background: "#ffffff", color: "#6b2f0a",
+            fontFamily: "'IBM Plex Mono'", letterSpacing: "0.08em"
+          }}>⬇ Excel</button>
           <button onClick={() => { fetchDealers(); fetchMonthly(); }} style={{ padding: "6px 12px", fontSize: 13, borderRadius: 4, border: "1px solid #e2e8f0", background: "#ffffff", color: "#888" }}>&#8635;</button>
         </div>
       </div>
