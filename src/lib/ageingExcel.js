@@ -1,10 +1,13 @@
 export async function generateAgeingExcel(salesmanName, dealers) {
   try {
-  if (!window.XLSXStyle) {
+  const _xlsxKey = "__xlsxStyleLoaded";
+  if (!window[_xlsxKey]) {
     await loadScript("https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
+    window[_xlsxKey] = true;
   }
 
-  const XLSX = window.XLSXStyle;
+  // xlsx-js-style exposes as window.XLSX
+  const XLSX = window.XLSX;
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
   const monthYear = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
