@@ -4,6 +4,7 @@ import { fmt, fmtDate, totalBalance, worstBucket, ageDays, ageBucket, stripColor
 import { extractInvoiceFromPDF } from "../lib/extractInvoice";
 import { uploadBillPDF, getBillPDFUrl, cleanupSettledBillPDFs } from "../lib/pdfStorage";
 import { generateAgeingReport } from "../lib/ageingReport";
+import { AdminWeeklyLeaderboard } from "../lib/WeeklyStats";
 
 export default function AdminView({ salesmen, onRefresh }) {
   const [data, setData] = useState([]);
@@ -23,17 +24,17 @@ export default function AdminView({ salesmen, onRefresh }) {
   const [newSalesman, setNewSalesman] = useState({ name: "", password: "" });
   const [newDealer, setNewDealer] = useState({ name: "", area: "" });
   const [newBill, setNewBill] = useState({ bill_no: "", amount: "", bill_date: "" });
-  const [pendingPDF, setPendingPDF] = useState(null); // { file, extracting, error }
+  const [pendingPDF, setPendingPDF] = useState(null);
   const [newCheque, setNewCheque] = useState({ amount: "", cheque_date: "", bank_name: "" });
   const [payAmount, setPayAmount] = useState("");
   const [bounceNote, setBounceNote] = useState("");
-  const [viewingPDF, setViewingPDF] = useState(null); // { url, bill_no }
+  const [viewingPDF, setViewingPDF] = useState(null);
 
   const fileInputRef = useRef();
 
   useEffect(() => {
     fetchAll();
-    cleanupSettledBillPDFs(); // run cleanup on every admin load
+    cleanupSettledBillPDFs();
   }, [salesmen]);
 
   const fetchAll = async () => {
@@ -53,7 +54,6 @@ export default function AdminView({ salesmen, onRefresh }) {
   const toggle = (id) => setExpanded(e => ({ ...e, [id]: !e[id] }));
   const toggleDealer = (id) => setExpandedDealer(e => ({ ...e, [id]: !e[id] }));
 
-  // ── PDF handling ──
   const handlePDFSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -61,11 +61,7 @@ export default function AdminView({ salesmen, onRefresh }) {
     setNewBill({ bill_no: "", amount: "", bill_date: "" });
     try {
       const fields = await extractInvoiceFromPDF(file);
-      setNewBill({
-        bill_no: fields.bill_no || "",
-        amount: fields.amount ? String(fields.amount) : "",
-        bill_date: fields.bill_date || ""
-      });
+      setNewBill({ bill_no: fields.bill_no || "", amount: fields.amount ? String(fields.amount) : "", bill_date: fields.bill_date || "" });
       setPendingPDF({ file, extracting: false, error: null });
     } catch (err) {
       setPendingPDF({ file, extracting: false, error: err.message });
@@ -73,82 +69,52 @@ export default function AdminView({ salesmen, onRefresh }) {
   };
 
   const openAddBill = (dealerId) => {
-    setShowAddBill(dealerId);
-    setShowAddCheque(null);
-    setShowPayment(null);
-    setPendingPDF(null);
-    setNewBill({ bill_no: "", amount: "", bill_date: "" });
+    setShowAddBill(dealerId); setShowAddCheque(null); setShowPayment(null);
+    setPendingPDF(null); setNewBill({ bill_no: "", amount: "", bill_date: "" });
   };
 
-  // ── Salesman ──
   const addSalesman = async () => {
     if (!newSalesman.name || !newSalesman.password) return;
     setSaving(true);
     await supabase.from("salesmen").insert(newSalesman);
-    setNewSalesman({ name: "", password: "" });
-    setShowAddSalesman(false);
-    setSaving(false);
-    onRefresh();
+    setNewSalesman({ name: "", password: "" }); setShowAddSalesman(false); setSaving(false); onRefresh();
   };
 
   const deleteSalesman = async (id) => {
     if (!window.confirm("Delete this salesman and all their data?")) return;
-    await supabase.from("salesmen").delete().eq("id", id);
-    onRefresh();
+    await supabase.from("salesmen").delete().eq("id", id); onRefresh();
   };
 
-  // ── Dealer ──
   const addDealer = async (salesmanId) => {
     if (!newDealer.name) return;
     setSaving(true);
     await supabase.from("dealers").insert({ ...newDealer, salesman_id: salesmanId });
-    setNewDealer({ name: "", area: "" });
-    setShowAddDealer(null);
-    setSaving(false);
-    fetchAll();
+    setNewDealer({ name: "", area: "" }); setShowAddDealer(null); setSaving(false); fetchAll();
   };
 
-  // ── Bill ──
   const addBill = async (dealerId) => {
     if (!newBill.bill_no || !newBill.amount || !newBill.bill_date) return;
     setSaving(true);
     try {
-      // Insert bill first to get ID
       const { data: inserted } = await supabase.from("bills").insert({
-        bill_no: newBill.bill_no,
-        amount: parseFloat(newBill.amount),
-        balance: parseFloat(newBill.amount),
-        bill_date: newBill.bill_date,
-        dealer_id: dealerId
+        bill_no: newBill.bill_no, amount: parseFloat(newBill.amount),
+        balance: parseFloat(newBill.amount), bill_date: newBill.bill_date, dealer_id: dealerId
       }).select().single();
-
-      // Upload PDF if one was selected
       if (inserted && pendingPDF?.file) {
         try {
           const pdfPath = await uploadBillPDF(pendingPDF.file, inserted.id);
           await supabase.from("bills").update({ pdf_path: pdfPath }).eq("id", inserted.id);
-        } catch (uploadErr) {
-          console.warn("PDF upload failed:", uploadErr);
-        }
+        } catch (uploadErr) { console.warn("PDF upload failed:", uploadErr); }
       }
-
-      setNewBill({ bill_no: "", amount: "", bill_date: "" });
-      setPendingPDF(null);
-      setShowAddBill(null);
-    } finally {
-      setSaving(false);
-      fetchAll();
-    }
+      setNewBill({ bill_no: "", amount: "", bill_date: "" }); setPendingPDF(null); setShowAddBill(null);
+    } finally { setSaving(false); fetchAll(); }
   };
 
-  // ── Mark bill settled (called after balance hits 0) ──
   const markSettledIfDone = async (bill) => {
-    if (Number(bill.balance) === 0 && !bill.settled_at) {
+    if (Number(bill.balance) === 0 && !bill.settled_at)
       await supabase.from("bills").update({ settled_at: new Date().toISOString() }).eq("id", bill.id);
-    }
   };
 
-  // ── Payment ──
   const recordPayment = async (dealer) => {
     const amount = parseFloat(payAmount);
     if (!amount || amount <= 0) return;
@@ -169,37 +135,22 @@ export default function AdminView({ salesmen, onRefresh }) {
         remaining -= apply;
       }
     }
-    setPayAmount("");
-    setShowPayment(null);
-    setSaving(false);
-    fetchAll();
+    setPayAmount(""); setShowPayment(null); setSaving(false); fetchAll();
   };
 
-  // ── Cheque ──
   const addCheque = async (dealerId) => {
     if (!newCheque.amount || !newCheque.cheque_date) return;
     setSaving(true);
-    await supabase.from("cheques").insert({
-      dealer_id: dealerId,
-      amount: parseFloat(newCheque.amount),
-      cheque_date: newCheque.cheque_date,
-      bank_name: newCheque.bank_name || null,
-      status: "pending"
-    });
-    setNewCheque({ amount: "", cheque_date: "", bank_name: "" });
-    setShowAddCheque(null);
-    setSaving(false);
-    fetchAll();
+    await supabase.from("cheques").insert({ dealer_id: dealerId, amount: parseFloat(newCheque.amount), cheque_date: newCheque.cheque_date, bank_name: newCheque.bank_name || null, status: "pending" });
+    setNewCheque({ amount: "", cheque_date: "", bank_name: "" }); setShowAddCheque(null); setSaving(false); fetchAll();
   };
 
   const clearCheque = async (cheque, dealer) => {
-    if (!window.confirm(`Mark cheque of ${fmt(cheque.amount)} as CLEARED? This will reduce the dealer's balance.`)) return;
+    if (!window.confirm(`Mark cheque of ${fmt(cheque.amount)} as CLEARED?`)) return;
     setSaving(true);
     await supabase.from("cheques").update({ status: "cleared" }).eq("id", cheque.id);
     const { data: payment } = await supabase.from("payments").insert({
-      dealer_id: dealer.id,
-      amount: cheque.amount,
-      payment_date: new Date().toISOString().split("T")[0],
+      dealer_id: dealer.id, amount: cheque.amount, payment_date: new Date().toISOString().split("T")[0],
       note: ("Cheque cleared" + (cheque.bank_name ? " — " + cheque.bank_name : "")).trim()
     }).select().single();
     if (payment) {
@@ -215,29 +166,21 @@ export default function AdminView({ salesmen, onRefresh }) {
         remaining -= apply;
       }
     }
-    setSaving(false);
-    fetchAll();
+    setSaving(false); fetchAll();
   };
 
   const bounceCheque = async (chequeId) => {
     setSaving(true);
     await supabase.from("cheques").update({ status: "bounced", bounce_note: bounceNote || null }).eq("id", chequeId);
-    setShowBounceNote(null);
-    setBounceNote("");
-    setSaving(false);
-    fetchAll();
+    setShowBounceNote(null); setBounceNote(""); setSaving(false); fetchAll();
   };
 
-  // ── View PDF ──
   const viewPDF = async (bill) => {
     if (!bill.pdf_path) return;
-    try {
-      const url = await getBillPDFUrl(bill.pdf_path);
-      setViewingPDF({ url, bill_no: bill.bill_no });
-    } catch { alert("Could not load PDF."); }
+    try { const url = await getBillPDFUrl(bill.pdf_path); setViewingPDF({ url, bill_no: bill.bill_no }); }
+    catch { alert("Could not load PDF."); }
   };
 
-  // ── Styles ──
   const card = { background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" };
   const inp = { background: "#f8fafc", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px", fontSize: 15, color: "#8b4513", width: "100%" };
   const btnP = { padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "none", background: "#8b4513", color: "#ffffff", letterSpacing: "0.06em", cursor: "pointer" };
@@ -272,11 +215,7 @@ export default function AdminView({ salesmen, onRefresh }) {
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 28, fontWeight: 500, color: "#a32d2d" }}>{fmt(grandTotal)}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => generateAgeingReport("All Salesmen", allDealers)} style={{
-            padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 12, borderRadius: 6,
-            border: "1px solid var(--border)", background: "#ffffff", color: "#8b4513",
-            letterSpacing: "0.08em", cursor: "pointer"
-          }}>⬇ Full Report</button>
+          <button onClick={() => generateAgeingReport("All Salesmen", allDealers)} style={{ padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 12, borderRadius: 6, border: "1px solid var(--border)", background: "#ffffff", color: "#8b4513", letterSpacing: "0.08em", cursor: "pointer" }}>⬇ Full Report</button>
           <button onClick={fetchAll} style={btnG}>&#8635; Refresh</button>
           <button onClick={() => setShowAddSalesman(true)} style={btnP}>+ Salesman</button>
         </div>
@@ -292,6 +231,9 @@ export default function AdminView({ salesmen, onRefresh }) {
           </div>
         </div>
       )}
+
+      {/* Weekly Leaderboard */}
+      <AdminWeeklyLeaderboard salesmen={salesmen} />
 
       {/* Add salesman */}
       {showAddSalesman && (
@@ -340,11 +282,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                     </div>
                   </div>
                   <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 500, color: smTotal > 0 ? "#a32d2d" : "#2d6a2d" }}>{fmt(smTotal)}</div>
-                  <button onClick={(e) => { e.stopPropagation(); generateAgeingReport(sm.name, sm.dealers); }} style={{
-                    padding: "4px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 9, borderRadius: 4,
-                    border: "1px solid #e2e8f0", background: "#ffffff", color: "#888",
-                    cursor: "pointer", letterSpacing: "0.06em"
-                  }}>⬇</button>
+                  <button onClick={(e) => { e.stopPropagation(); generateAgeingReport(sm.name, sm.dealers); }} style={{ padding: "4px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 9, borderRadius: 4, border: "1px solid #e2e8f0", background: "#ffffff", color: "#888", cursor: "pointer" }}>⬇</button>
                   <span style={{ fontSize: 13, color: "#888888" }}>{isOpen ? "▲" : "▼"}</span>
                 </div>
 
@@ -434,7 +372,6 @@ export default function AdminView({ salesmen, onRefresh }) {
                             </div>
                           </div>
 
-                          {/* Payment form */}
                           {showPayment === dealer.id && (
                             <div style={{ padding: "12px 16px 12px 20px", background: "#f8fafc", borderTop: "1px solid #e5e3f0" }}>
                               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 8 }}>RECORD PAYMENT (FIFO)</div>
@@ -447,7 +384,6 @@ export default function AdminView({ salesmen, onRefresh }) {
                             </div>
                           )}
 
-                          {/* Add cheque form */}
                           {showAddCheque === dealer.id && (
                             <div style={{ padding: "12px 16px 12px 20px", background: "#fffbeb", borderTop: "1px solid #f0d860" }}>
                               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#92640a", marginBottom: 8 }}>LOG CHEQUE</div>
@@ -461,16 +397,10 @@ export default function AdminView({ salesmen, onRefresh }) {
                             </div>
                           )}
 
-                          {/* Add bill form with PDF upload */}
                           {showAddBill === dealer.id && (
                             <div style={{ padding: "12px 16px 12px 20px", background: "#f8fafc", borderTop: "1px solid #e5e3f0" }}>
                               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 10 }}>ADD BILL</div>
-
-                              {/* PDF upload zone */}
-                              <div
-                                onClick={() => fileInputRef.current?.click()}
-                                style={{ border: "2px dashed #c8c4e0", borderRadius: 10, padding: "14px", textAlign: "center", cursor: "pointer", background: pendingPDF?.file ? "#f8fafc" : "#ffffff", marginBottom: 10 }}
-                              >
+                              <div onClick={() => fileInputRef.current?.click()} style={{ border: "2px dashed #c8c4e0", borderRadius: 10, padding: "14px", textAlign: "center", cursor: "pointer", background: pendingPDF?.file ? "#f8fafc" : "#ffffff", marginBottom: 10 }}>
                                 <input ref={fileInputRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={handlePDFSelect} />
                                 {!pendingPDF && <div style={{ fontSize: 13, color: "#888888" }}>📄 Upload Tally Invoice PDF to auto-fill fields</div>}
                                 {pendingPDF?.extracting && <div style={{ fontSize: 13, color: "var(--accent)", fontFamily: "'IBM Plex Mono'" }}>⏳ Extracting fields...</div>}
@@ -482,19 +412,18 @@ export default function AdminView({ salesmen, onRefresh }) {
                                   </div>
                                 )}
                               </div>
-
-                              {/* Editable fields (pre-filled from PDF or manual) */}
-                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                <input style={{ ...inp, flex: 1 }} placeholder="Bill no." value={newBill.bill_no} onChange={e => setNewBill(n => ({ ...n, bill_no: e.target.value }))} />
-                                <input type="number" style={{ ...inp, flex: 1 }} placeholder="Amount" value={newBill.amount} onChange={e => setNewBill(n => ({ ...n, amount: e.target.value }))} />
-                                <input type="date" style={{ ...inp, flex: 1 }} value={newBill.bill_date} onChange={e => setNewBill(n => ({ ...n, bill_date: e.target.value }))} />
-                                <button onClick={() => addBill(dealer.id)} disabled={saving || pendingPDF?.extracting} style={btnP}>SAVE</button>
-                                <button onClick={() => { setShowAddBill(null); setPendingPDF(null); }} style={btnG}>✕</button>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                <input style={inp} placeholder="Bill no." value={newBill.bill_no} onChange={e => setNewBill(n => ({ ...n, bill_no: e.target.value }))} />
+                                <input type="number" style={inp} placeholder="Amount" value={newBill.amount} onChange={e => setNewBill(n => ({ ...n, amount: e.target.value }))} />
+                                <input type="date" style={inp} value={newBill.bill_date} onChange={e => setNewBill(n => ({ ...n, bill_date: e.target.value }))} />
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <button onClick={() => addBill(dealer.id)} disabled={saving || pendingPDF?.extracting} style={{ ...btnP, flex: 1 }}>SAVE</button>
+                                  <button onClick={() => { setShowAddBill(null); setPendingPDF(null); }} style={btnG}>✕</button>
+                                </div>
                               </div>
                             </div>
                           )}
 
-                          {/* Bills expanded */}
                           {isDealerOpen && dealer.bills.length > 0 && (
                             <div style={{ background: "#ffffff" }}>
                               {dealer.bills.sort((a, b) => new Date(a.bill_date) - new Date(b.bill_date)).map((bill) => {
@@ -505,9 +434,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                                     <div>
                                       <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#8b4513" }}>{bill.bill_no}</span>
                                       <span style={{ fontSize: 13, color: "#888888", marginLeft: 8 }}>{fmtDate(bill.bill_date)}</span>
-                                      {bill.pdf_path && (
-                                        <button onClick={() => viewPDF(bill)} style={{ marginLeft: 8, background: "none", border: "none", cursor: "pointer", fontSize: 13 }} title="View PDF">📄</button>
-                                      )}
+                                      {bill.pdf_path && <button onClick={() => viewPDF(bill)} style={{ marginLeft: 8, background: "none", border: "none", cursor: "pointer", fontSize: 13 }} title="View PDF">📄</button>}
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                       <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12 }}>Bal: {fmt(bill.balance)}</span>
