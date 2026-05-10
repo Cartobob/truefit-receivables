@@ -4,6 +4,7 @@ import { fmt, fmtDate, ageDays, ageBucket, worstBucket, totalBalance, stripColor
 import { getBillPDFUrl } from "../lib/pdfStorage";
 import { generateAgeingReport } from "../lib/ageingReport";
 import { generateAgeingExcel } from "../lib/ageingExcel";
+import { SalesmanWeeklyCard } from "../lib/WeeklyStats";
 
 export default function SalesmanView({ salesman }) {
   const [dealers, setDealers] = useState([]);
@@ -11,10 +12,8 @@ export default function SalesmanView({ salesman }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [viewingPDF, setViewingPDF] = useState(null);
-  const [monthlySales, setMonthlySales] = useState(0);
-  const [monthlyCollections, setMonthlyCollections] = useState(0);
 
-  useEffect(() => { fetchDealers(); fetchMonthly(); }, [salesman.id]);
+  useEffect(() => { fetchDealers(); }, [salesman.id]);
 
   const fetchDealers = async () => {
     setLoading(true);
@@ -28,40 +27,6 @@ export default function SalesmanView({ salesman }) {
       bills: (d.bills || []).filter(b => Number(b.balance) > 0)
     })));
     setLoading(false);
-  };
-
-  const fetchMonthly = async () => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
-
-    // Get all dealer ids for this salesman
-    const { data: dealerIds } = await supabase
-      .from("dealers")
-      .select("id")
-      .eq("salesman_id", salesman.id);
-
-    if (!dealerIds || dealerIds.length === 0) return;
-    const ids = dealerIds.map(d => d.id);
-
-    // Bills raised this month
-    const { data: bills } = await supabase
-      .from("bills")
-      .select("amount")
-      .in("dealer_id", ids)
-      .gte("bill_date", start)
-      .lte("bill_date", end);
-
-    // Payments received this month
-    const { data: payments } = await supabase
-      .from("payments")
-      .select("amount")
-      .in("dealer_id", ids)
-      .gte("payment_date", start)
-      .lte("payment_date", end);
-
-    setMonthlySales((bills || []).reduce((s, b) => s + Number(b.amount), 0));
-    setMonthlyCollections((payments || []).reduce((s, p) => s + Number(p.amount), 0));
   };
 
   const toggle = (id) => setExpanded(e => ({ ...e, [id]: !e[id] }));
@@ -80,9 +45,6 @@ export default function SalesmanView({ salesman }) {
   const b60  = dealers.reduce((s, d) => s + (d.bills||[]).filter(b => ageDays(b.bill_date) > 30 && ageDays(b.bill_date) <= 60).reduce((x, b) => x + Number(b.balance), 0), 0);
   const b60p = dealers.reduce((s, d) => s + (d.bills||[]).filter(b => ageDays(b.bill_date) > 60).reduce((x, b) => x + Number(b.balance), 0), 0);
 
-  const now = new Date();
-  const monthLabel = now.toLocaleString("en-IN", { month: "long", year: "numeric" });
-
   const card = { background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" };
   const visibleDealers = dealers.filter(d => totalBalance(d.bills) > 0 && d.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -100,20 +62,8 @@ export default function SalesmanView({ salesman }) {
         </div>
       )}
 
-      {/* Current month sales & collections */}
-      <div style={{ ...card, padding: "14px 16px", marginBottom: 16 }}>
-        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.14em", color: "#888", marginBottom: 10 }}>{monthLabel.toUpperCase()}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.12em", color: "#888", marginBottom: 4 }}>SALES</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 600, color: "#6b2f0a" }}>{fmt(monthlySales)}</div>
-          </div>
-          <div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.12em", color: "#888", marginBottom: 4 }}>COLLECTIONS</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 600, color: "#166534" }}>{fmt(monthlyCollections)}</div>
-          </div>
-        </div>
-      </div>
+      {/* Weekly / Monthly stats card */}
+      <SalesmanWeeklyCard salesmanId={salesman.id} />
 
       {/* Outstanding header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
@@ -132,7 +82,7 @@ export default function SalesmanView({ salesman }) {
             border: "1px solid #6b2f0a", background: "#ffffff", color: "#6b2f0a",
             fontFamily: "'IBM Plex Mono'", letterSpacing: "0.08em"
           }}>⬇ Excel</button>
-          <button onClick={() => { fetchDealers(); fetchMonthly(); }} style={{ padding: "6px 12px", fontSize: 13, borderRadius: 4, border: "1px solid #e2e8f0", background: "#ffffff", color: "#888" }}>&#8635;</button>
+          <button onClick={fetchDealers} style={{ padding: "6px 12px", fontSize: 13, borderRadius: 4, border: "1px solid #e2e8f0", background: "#ffffff", color: "#888" }}>&#8635;</button>
         </div>
       </div>
 
