@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { fmt, fmtDate, ageDays, ageBucket, worstBucket, totalBalance, stripColor, pendingCheques, totalPendingCheques } from "../lib/helpers";
+import { fmt, fmtDate, ageDays, ageBucket, worstBucket, totalBalance, stripColor, pendingCheques, totalPendingCheques, paymentDot } from "../lib/helpers";
 import { getBillPDFUrl } from "../lib/pdfStorage";
 import { generateAgeingReport } from "../lib/ageingReport";
 import { generateAgeingExcel } from "../lib/ageingExcel";
@@ -133,7 +133,10 @@ export default function SalesmanView({ salesman }) {
                 <div style={{ padding: "14px 16px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 500, color: "#6b2f0a", marginBottom: 2 }}>{dealer.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: paymentDot(dealer.bills).color, flexShrink: 0 }} title={paymentDot(dealer.bills).title} />
+                        <div style={{ fontSize: 15, fontWeight: 500, color: "#6b2f0a" }}>{dealer.name}</div>
+                      </div>
                       {dealer.area && <div style={{ fontSize: 12, color: "#888" }}>{dealer.area}</div>}
                     </div>
                     <div style={{ textAlign: "right" }}>
