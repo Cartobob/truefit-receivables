@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
-import { fmt, fmtDate, totalBalance, worstBucket, ageDays, ageBucket, stripColor, pendingCheques, totalPendingCheques } from "../lib/helpers";
+import { fmt, fmtDate, totalBalance, worstBucket, ageDays, ageBucket, stripColor, pendingCheques, totalPendingCheques, paymentDot } from "../lib/helpers";
 import { extractInvoiceFromPDF } from "../lib/extractInvoice";
 import { uploadBillPDF, getBillPDFUrl, cleanupSettledBillPDFs } from "../lib/pdfStorage";
 import { generateAgeingReport } from "../lib/ageingReport";
@@ -345,7 +345,10 @@ export default function AdminView({ salesmen, onRefresh }) {
                         <div key={dealer.id} style={{ borderBottom: di < filteredDealers.length - 1 ? "1px solid #f0eef8" : "none", borderLeft: "3px solid " + sc }}>
                           <div style={{ padding: "12px 16px 12px 20px", display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{dealer.name}</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: dealer.area ? 2 : 0 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: "50%", background: paymentDot(dealer.bills).color, flexShrink: 0 }} title={paymentDot(dealer.bills).title} />
+                                <div style={{ fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{dealer.name}</div>
+                              </div>
                               {dealer.area && <div style={{ fontSize: 13, color: "#888888" }}>{dealer.area}</div>}
 
                               {pending.length > 0 && (
