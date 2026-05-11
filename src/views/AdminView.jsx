@@ -19,6 +19,8 @@ export default function AdminView({ salesmen, onRefresh }) {
   const [showAddBill, setShowAddBill] = useState(null);
   const [showAddCheque, setShowAddCheque] = useState(null);
   const [showPayment, setShowPayment] = useState(null);
+  const [payMode, setPayMode] = useState("fifo"); // "fifo" | "manual"
+  const [billAllocations, setBillAllocations] = useState({}); // billId -> amount string
   const [showBounceNote, setShowBounceNote] = useState(null);
 
   const [newSalesman, setNewSalesman] = useState({ name: "", password: "" });
@@ -136,6 +138,30 @@ export default function AdminView({ salesmen, onRefresh }) {
       }
     }
     setPayAmount(""); setShowPayment(null); setSaving(false); fetchAll();
+  };
+
+  const recordManualPayment = async (dealer) => {
+    const allocations = Object.entries(billAllocations)
+      .map(([id, amt]) => ({ id, amount: parseFloat(amt) || 0 }))
+      .filter(a => a.amount > 0);
+    if (allocations.length === 0) return;
+    const totalAmount = allocations.reduce((s, a) => s + a.amount, 0);
+    setSaving(true);
+    const { data: payment } = await supabase.from("payments").insert({
+      dealer_id: dealer.id, amount: totalAmount, payment_date: new Date().toISOString().split("T")[0]
+    }).select().single();
+    if (payment) {
+      for (const alloc of allocations) {
+        const bill = dealer.bills.find(b => b.id === alloc.id);
+        if (!bill) continue;
+        const apply = Math.min(alloc.amount, Number(bill.balance));
+        await supabase.from("payment_allocations").insert({ payment_id: payment.id, bill_id: bill.id, amount_applied: apply });
+        const newBalance = Number(bill.balance) - apply;
+        await supabase.from("bills").update({ balance: newBalance }).eq("id", bill.id);
+        if (newBalance === 0) await markSettledIfDone({ ...bill, balance: newBalance });
+      }
+    }
+    setBillAllocations({}); setShowPayment(null); setSaving(false); fetchAll();
   };
 
   const addCheque = async (dealerId) => {
@@ -374,13 +400,57 @@ export default function AdminView({ salesmen, onRefresh }) {
 
                           {showPayment === dealer.id && (
                             <div style={{ padding: "12px 16px 12px 20px", background: "#f8fafc", borderTop: "1px solid #e5e3f0" }}>
-                              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 8 }}>RECORD PAYMENT (FIFO)</div>
-                              <div style={{ display: "flex", gap: 8 }}>
-                                <input type="number" style={{ ...inp, flex: 1 }} placeholder="Amount received" value={payAmount} onChange={e => setPayAmount(e.target.value)} />
-                                <button onClick={() => recordPayment(dealer)} disabled={saving} style={btnP}>CONFIRM</button>
-                                <button onClick={() => setShowPayment(null)} style={btnG}>✕</button>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "var(--accent)" }}>RECORD PAYMENT</div>
+                                <div style={{ display: "flex", gap: 4 }}>
+                                  {["fifo", "manual"].map(m => (
+                                    <button key={m} onClick={() => setPayMode(m)} style={{
+                                      padding: "3px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 10, borderRadius: 4, border: "1px solid",
+                                      background: payMode === m ? "#6b2f0a" : "#ffffff",
+                                      borderColor: payMode === m ? "#6b2f0a" : "#e2e8f0",
+                                      color: payMode === m ? "#ffffff" : "#888", cursor: "pointer"
+                                    }}>{m === "fifo" ? "AUTO" : "MANUAL"}</button>
+                                  ))}
+                                </div>
                               </div>
-                              <div style={{ fontSize: 13, color: "var(--accent)", marginTop: 6 }}>Applied to oldest bill first</div>
+
+                              {payMode === "fifo" ? (
+                                <>
+                                  <div style={{ display: "flex", gap: 8 }}>
+                                    <input type="number" style={{ ...inp, flex: 1 }} placeholder="Amount received" value={payAmount} onChange={e => setPayAmount(e.target.value)} />
+                                    <button onClick={() => recordPayment(dealer)} disabled={saving} style={btnP}>CONFIRM</button>
+                                    <button onClick={() => setShowPayment(null)} style={btnG}>✕</button>
+                                  </div>
+                                  <div style={{ fontSize: 12, color: "var(--accent)", marginTop: 6 }}>Applied to oldest bill first</div>
+                                </>
+                              ) : (
+                                <>
+                                  <div style={{ marginBottom: 8 }}>
+                                    {dealer.bills.filter(b => Number(b.balance) > 0).sort((a, b) => new Date(a.bill_date) - new Date(b.bill_date)).map(bill => (
+                                      <div key={bill.id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                                        <div style={{ flex: 1 }}>
+                                          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#6b2f0a" }}>{bill.bill_no}</div>
+                                          <div style={{ fontSize: 11, color: "#888" }}>Balance: {fmt(bill.balance)}</div>
+                                        </div>
+                                        <input type="number" placeholder="0"
+                                          style={{ ...inp, width: 110, fontSize: 13 }}
+                                          value={billAllocations[bill.id] || ""}
+                                          onChange={e => setBillAllocations(a => ({ ...a, [bill.id]: e.target.value }))}
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #e2e8f0" }}>
+                                    <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#6b2f0a" }}>
+                                      TOTAL: {fmt(Object.values(billAllocations).reduce((s, v) => s + (parseFloat(v) || 0), 0))}
+                                    </div>
+                                    <div style={{ display: "flex", gap: 8 }}>
+                                      <button onClick={() => recordManualPayment(dealer)} disabled={saving} style={btnP}>CONFIRM</button>
+                                      <button onClick={() => { setShowPayment(null); setBillAllocations({}); }} style={btnG}>✕</button>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           )}
 
