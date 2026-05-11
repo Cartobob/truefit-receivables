@@ -134,7 +134,7 @@ export default function SalesmanView({ salesman }) {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: paymentDot(dealer.bills).color, flexShrink: 0 }} title={paymentDot(dealer.bills).title} />
+                        <div style={{ width: 16, height: 16, borderRadius: "50%", background: paymentDot(dealer.bills).color, flexShrink: 0 }} title={paymentDot(dealer.bills).title} />
                         <div style={{ fontSize: 15, fontWeight: 500, color: "#6b2f0a" }}>{dealer.name}</div>
                       </div>
                       {dealer.area && <div style={{ fontSize: 12, color: "#888" }}>{dealer.area}</div>}
