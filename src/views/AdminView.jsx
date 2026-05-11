@@ -346,7 +346,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                           <div style={{ padding: "12px 16px 12px 20px", display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: dealer.area ? 2 : 0 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: "50%", background: paymentDot(dealer.bills).color, flexShrink: 0 }} title={paymentDot(dealer.bills).title} />
+                                <div style={{ width: 16, height: 16, borderRadius: "50%", background: paymentDot(dealer.bills).color, flexShrink: 0 }} title={paymentDot(dealer.bills).title} />
                                 <div style={{ fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{dealer.name}</div>
                               </div>
                               {dealer.area && <div style={{ fontSize: 13, color: "#888888" }}>{dealer.area}</div>}
