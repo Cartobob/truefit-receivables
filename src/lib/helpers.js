@@ -31,6 +31,25 @@ export const stripColor = (bills) => {
   return "#b84040";
 };
 
+export const weightedAvgAge = (bills) => {
+  const active = (bills || []).filter(b => Number(b.balance) > 0);
+  if (active.length === 0) return 0;
+  const totalBal = active.reduce((s, b) => s + Number(b.balance), 0);
+  if (totalBal === 0) return 0;
+  const weightedSum = active.reduce((s, b) => s + Number(b.balance) * ageDays(b.bill_date), 0);
+  return weightedSum / totalBal;
+};
+
+export const paymentDot = (bills) => {
+  const active = (bills || []).filter(b => Number(b.balance) > 0);
+  if (active.length === 0) return { color: "#16a34a", title: "Fully paid" };
+  const avg = weightedAvgAge(active);
+  if (avg < 30)  return { color: "#16a34a", title: `Avg age ${Math.round(avg)}d — good payer` };
+  if (avg < 60)  return { color: "#ca8a04", title: `Avg age ${Math.round(avg)}d — slow payer` };
+  if (avg < 90)  return { color: "#ea580c", title: `Avg age ${Math.round(avg)}d — overdue` };
+  return { color: "#dc2626", title: `Avg age ${Math.round(avg)}d — bad payer` };
+};
+
 export const pendingCheques = (cheques) => {
   if (!cheques) return [];
   return cheques.filter(c => c.status === "pending");
