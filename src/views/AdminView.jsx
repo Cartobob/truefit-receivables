@@ -210,6 +210,8 @@ export default function AdminView({ salesmen, onRefresh }) {
     setSaving(false);
     fetchAll();
   };
+
+  const viewPDF = async (bill) => {
     if (!bill.pdf_path) return;
     try { const url = await getBillPDFUrl(bill.pdf_path); setViewingPDF({ url, bill_no: bill.bill_no }); }
     catch { alert("Could not load PDF."); }
