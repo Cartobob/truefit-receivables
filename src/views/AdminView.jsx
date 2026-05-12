@@ -19,8 +19,9 @@ export default function AdminView({ salesmen, onRefresh }) {
   const [showAddBill, setShowAddBill] = useState(null);
   const [showAddCheque, setShowAddCheque] = useState(null);
   const [showPayment, setShowPayment] = useState(null);
-  const [payMode, setPayMode] = useState("fifo"); // "fifo" | "manual"
-  const [billAllocations, setBillAllocations] = useState({}); // billId -> amount string
+  const [payMode, setPayMode] = useState("fifo");
+  const [billAllocations, setBillAllocations] = useState({});
+  const [showTransfer, setShowTransfer] = useState(null);
   const [showBounceNote, setShowBounceNote] = useState(null);
 
   const [newSalesman, setNewSalesman] = useState({ name: "", password: "" });
@@ -201,7 +202,14 @@ export default function AdminView({ salesmen, onRefresh }) {
     setShowBounceNote(null); setBounceNote(""); setSaving(false); fetchAll();
   };
 
-  const viewPDF = async (bill) => {
+  const transferDealer = async (dealerId, newSalesmanId) => {
+    if (!newSalesmanId) return;
+    setSaving(true);
+    await supabase.from("dealers").update({ salesman_id: newSalesmanId }).eq("id", dealerId);
+    setShowTransfer(null);
+    setSaving(false);
+    fetchAll();
+  };
     if (!bill.pdf_path) return;
     try { const url = await getBillPDFUrl(bill.pdf_path); setViewingPDF({ url, bill_no: bill.bill_no }); }
     catch { alert("Could not load PDF."); }
@@ -393,6 +401,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                               <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
                                 <button onClick={() => { setShowPayment(dealer.id); setShowAddBill(null); setShowAddCheque(null); }} style={{ ...btnP, padding: "4px 10px", fontSize: 10 }}>+ Payment</button>
                                 <button onClick={() => { setShowAddCheque(dealer.id); setShowAddBill(null); setShowPayment(null); }} style={btnAmber}>+ Cheque</button>
+                                <button onClick={() => { setShowAddBill(null); setShowAddCheque(null); setShowPayment(null); setShowTransfer(showTransfer === dealer.id ? null : dealer.id); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>⇄ Transfer</button>
                                 <button onClick={() => openAddBill(dealer.id)} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>+ Bill</button>
                                 <button onClick={() => toggleDealer(dealer.id)} style={{ ...btnG, padding: "4px 8px", fontSize: 11 }}>
                                   {dealer.bills.length} bills {isDealerOpen ? "▲" : "▼"}
@@ -457,7 +466,25 @@ export default function AdminView({ salesmen, onRefresh }) {
                             </div>
                           )}
 
-                          {showAddCheque === dealer.id && (
+                          {showTransfer === dealer.id && (
+                            <div style={{ padding: "12px 16px 12px 20px", background: "#f0f7ff", borderTop: "1px solid #e2e8f0" }}>
+                              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#1d4ed8", marginBottom: 8 }}>TRANSFER TO SALESMAN</div>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <select id={`transfer-${dealer.id}`} style={{ ...inp, flex: 1 }} defaultValue="">
+                                  <option value="">— Select salesman —</option>
+                                  {salesmen.filter(s => !data.find(d => d.id === s.id && d.dealers.find(dl => dl.id === dealer.id))).map(s => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                  ))}
+                                </select>
+                                <button disabled={saving} style={{ ...btnP, background: "#1d4ed8" }}
+                                  onClick={() => {
+                                    const sel = document.getElementById(`transfer-${dealer.id}`);
+                                    if (sel?.value) transferDealer(dealer.id, sel.value);
+                                  }}>MOVE</button>
+                                <button onClick={() => setShowTransfer(null)} style={btnG}>✕</button>
+                              </div>
+                            </div>
+                          )}
                             <div style={{ padding: "12px 16px 12px 20px", background: "#fffbeb", borderTop: "1px solid #f0d860" }}>
                               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#92640a", marginBottom: 8 }}>LOG CHEQUE</div>
                               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
