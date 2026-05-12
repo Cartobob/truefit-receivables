@@ -22,6 +22,8 @@ export default function AdminView({ salesmen, onRefresh }) {
   const [payMode, setPayMode] = useState("fifo");
   const [billAllocations, setBillAllocations] = useState({});
   const [showTransfer, setShowTransfer] = useState(null);
+  const [editingBill, setEditingBill] = useState(null);
+  const [editBillData, setEditBillData] = useState({});
   const [showBounceNote, setShowBounceNote] = useState(null);
 
   const [newSalesman, setNewSalesman] = useState({ name: "", password: "" });
@@ -211,7 +213,27 @@ export default function AdminView({ salesmen, onRefresh }) {
     fetchAll();
   };
 
-  const viewPDF = async (bill) => {
+  const saveBill = async (billId) => {
+    setSaving(true);
+    await supabase.from("bills").update({
+      bill_no: editBillData.bill_no,
+      amount: parseFloat(editBillData.amount),
+      balance: parseFloat(editBillData.balance),
+      bill_date: editBillData.bill_date,
+    }).eq("id", billId);
+    setEditingBill(null);
+    setEditBillData({});
+    setSaving(false);
+    fetchAll();
+  };
+
+  const deleteBill = async (billId) => {
+    if (!window.confirm("Delete this bill permanently?")) return;
+    setSaving(true);
+    await supabase.from("bills").delete().eq("id", billId);
+    setSaving(false);
+    fetchAll();
+  };
     if (!bill.pdf_path) return;
     try { const url = await getBillPDFUrl(bill.pdf_path); setViewingPDF({ url, bill_no: bill.bill_no }); }
     catch { alert("Could not load PDF."); }
@@ -531,6 +553,28 @@ export default function AdminView({ salesmen, onRefresh }) {
                               {dealer.bills.sort((a, b) => new Date(a.bill_date) - new Date(b.bill_date)).map((bill) => {
                                 const days = ageDays(bill.bill_date);
                                 const bkt = ageBucket(days);
+                                const isEditing = editingBill === bill.id;
+
+                                if (isEditing) return (
+                                  <div key={bill.id} style={{ padding: "10px 16px 10px 36px", borderTop: "1px solid #f0eef8", background: "#fdf0e8" }}>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                        <input style={{ ...inp, flex: 2, fontSize: 12 }} placeholder="Bill no." value={editBillData.bill_no || ""} onChange={e => setEditBillData(d => ({ ...d, bill_no: e.target.value }))} />
+                                        <input type="date" style={{ ...inp, flex: 1, fontSize: 12 }} value={editBillData.bill_date || ""} onChange={e => setEditBillData(d => ({ ...d, bill_date: e.target.value }))} />
+                                      </div>
+                                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                        <input type="number" style={{ ...inp, flex: 1, fontSize: 12 }} placeholder="Amount" value={editBillData.amount || ""} onChange={e => setEditBillData(d => ({ ...d, amount: e.target.value }))} />
+                                        <input type="number" style={{ ...inp, flex: 1, fontSize: 12 }} placeholder="Balance" value={editBillData.balance || ""} onChange={e => setEditBillData(d => ({ ...d, balance: e.target.value }))} />
+                                      </div>
+                                      <div style={{ display: "flex", gap: 6 }}>
+                                        <button onClick={() => saveBill(bill.id)} disabled={saving} style={{ ...btnP, flex: 1, fontSize: 11 }}>SAVE</button>
+                                        <button onClick={() => deleteBill(bill.id)} disabled={saving} style={{ ...btnRed, fontSize: 11 }}>DELETE</button>
+                                        <button onClick={() => { setEditingBill(null); setEditBillData({}); }} style={{ ...btnG, fontSize: 11 }}>✕</button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+
                                 return (
                                   <div key={bill.id} style={{ padding: "8px 16px 8px 36px", borderTop: "1px solid #f0eef8", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
                                     <div>
@@ -542,6 +586,8 @@ export default function AdminView({ salesmen, onRefresh }) {
                                       <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12 }}>Bal: {fmt(bill.balance)}</span>
                                       <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#888888" }}>/ {fmt(bill.amount)}</span>
                                       <span style={{ fontSize: 13, padding: "2px 7px", borderRadius: 6, background: bkt.bg, color: bkt.color, border: "1px solid " + bkt.border }}>{days}d</span>
+                                      <button onClick={() => { setEditingBill(bill.id); setEditBillData({ bill_no: bill.bill_no, amount: bill.amount, balance: bill.balance, bill_date: bill.bill_date }); }}
+                                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#888" }} title="Edit bill">✏️</button>
                                     </div>
                                   </div>
                                 );
