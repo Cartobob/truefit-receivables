@@ -13,7 +13,6 @@ export default function AdminView({ salesmen, onRefresh }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
-
   const [showAddSalesman, setShowAddSalesman] = useState(false);
   const [showAddDealer, setShowAddDealer] = useState(null);
   const [showAddBill, setShowAddBill] = useState(null);
@@ -25,7 +24,6 @@ export default function AdminView({ salesmen, onRefresh }) {
   const [editingBill, setEditingBill] = useState(null);
   const [editBillData, setEditBillData] = useState({});
   const [showBounceNote, setShowBounceNote] = useState(null);
-
   const [newSalesman, setNewSalesman] = useState({ name: "", password: "" });
   const [newDealer, setNewDealer] = useState({ name: "", area: "" });
   const [newBill, setNewBill] = useState({ bill_no: "", amount: "", bill_date: "" });
@@ -34,25 +32,14 @@ export default function AdminView({ salesmen, onRefresh }) {
   const [payAmount, setPayAmount] = useState("");
   const [bounceNote, setBounceNote] = useState("");
   const [viewingPDF, setViewingPDF] = useState(null);
-
   const fileInputRef = useRef();
 
-  useEffect(() => {
-    fetchAll();
-    cleanupSettledBillPDFs();
-  }, [salesmen]);
+  useEffect(() => { fetchAll(); cleanupSettledBillPDFs(); }, [salesmen]);
 
   const fetchAll = async () => {
     setLoading(true);
-    const { data: dealers } = await supabase
-      .from("dealers")
-      .select("*, bills(*), cheques(*)")
-      .order("name");
-    const grouped = salesmen.map(s => ({
-      ...s,
-      dealers: (dealers || []).filter(d => d.salesman_id === s.id)
-    }));
-    setData(grouped);
+    const { data: dealers } = await supabase.from("dealers").select("*, bills(*), cheques(*)").order("name");
+    setData(salesmen.map(s => ({ ...s, dealers: (dealers || []).filter(d => d.salesman_id === s.id) })));
     setLoading(false);
   };
 
@@ -68,9 +55,7 @@ export default function AdminView({ salesmen, onRefresh }) {
       const fields = await extractInvoiceFromPDF(file);
       setNewBill({ bill_no: fields.bill_no || "", amount: fields.amount ? String(fields.amount) : "", bill_date: fields.bill_date || "" });
       setPendingPDF({ file, extracting: false, error: null });
-    } catch (err) {
-      setPendingPDF({ file, extracting: false, error: err.message });
-    }
+    } catch (err) { setPendingPDF({ file, extracting: false, error: err.message }); }
   };
 
   const openAddBill = (dealerId) => {
@@ -109,7 +94,7 @@ export default function AdminView({ salesmen, onRefresh }) {
         try {
           const pdfPath = await uploadBillPDF(pendingPDF.file, inserted.id);
           await supabase.from("bills").update({ pdf_path: pdfPath }).eq("id", inserted.id);
-        } catch (uploadErr) { console.warn("PDF upload failed:", uploadErr); }
+        } catch (err) { console.warn("PDF upload failed:", err); }
       }
       setNewBill({ bill_no: "", amount: "", bill_date: "" }); setPendingPDF(null); setShowAddBill(null);
     } finally { setSaving(false); fetchAll(); }
@@ -134,9 +119,9 @@ export default function AdminView({ salesmen, onRefresh }) {
         if (remaining <= 0) break;
         const apply = Math.min(remaining, Number(bill.balance));
         await supabase.from("payment_allocations").insert({ payment_id: payment.id, bill_id: bill.id, amount_applied: apply });
-        const newBalance = Number(bill.balance) - apply;
-        await supabase.from("bills").update({ balance: newBalance }).eq("id", bill.id);
-        if (newBalance === 0) await markSettledIfDone({ ...bill, balance: newBalance });
+        const nb = Number(bill.balance) - apply;
+        await supabase.from("bills").update({ balance: nb }).eq("id", bill.id);
+        if (nb === 0) await markSettledIfDone({ ...bill, balance: nb });
         remaining -= apply;
       }
     }
@@ -144,9 +129,7 @@ export default function AdminView({ salesmen, onRefresh }) {
   };
 
   const recordManualPayment = async (dealer) => {
-    const allocations = Object.entries(billAllocations)
-      .map(([id, amt]) => ({ id, amount: parseFloat(amt) || 0 }))
-      .filter(a => a.amount > 0);
+    const allocations = Object.entries(billAllocations).map(([id, amt]) => ({ id, amount: parseFloat(amt) || 0 })).filter(a => a.amount > 0);
     if (allocations.length === 0) return;
     const totalAmount = allocations.reduce((s, a) => s + a.amount, 0);
     setSaving(true);
@@ -159,9 +142,9 @@ export default function AdminView({ salesmen, onRefresh }) {
         if (!bill) continue;
         const apply = Math.min(alloc.amount, Number(bill.balance));
         await supabase.from("payment_allocations").insert({ payment_id: payment.id, bill_id: bill.id, amount_applied: apply });
-        const newBalance = Number(bill.balance) - apply;
-        await supabase.from("bills").update({ balance: newBalance }).eq("id", bill.id);
-        if (newBalance === 0) await markSettledIfDone({ ...bill, balance: newBalance });
+        const nb = Number(bill.balance) - apply;
+        await supabase.from("bills").update({ balance: nb }).eq("id", bill.id);
+        if (nb === 0) await markSettledIfDone({ ...bill, balance: nb });
       }
     }
     setBillAllocations({}); setShowPayment(null); setSaving(false); fetchAll();
@@ -189,9 +172,9 @@ export default function AdminView({ salesmen, onRefresh }) {
         if (remaining <= 0) break;
         const apply = Math.min(remaining, Number(bill.balance));
         await supabase.from("payment_allocations").insert({ payment_id: payment.id, bill_id: bill.id, amount_applied: apply });
-        const newBalance = Number(bill.balance) - apply;
-        await supabase.from("bills").update({ balance: newBalance }).eq("id", bill.id);
-        if (newBalance === 0) await markSettledIfDone({ ...bill, balance: newBalance });
+        const nb = Number(bill.balance) - apply;
+        await supabase.from("bills").update({ balance: nb }).eq("id", bill.id);
+        if (nb === 0) await markSettledIfDone({ ...bill, balance: nb });
         remaining -= apply;
       }
     }
@@ -208,35 +191,31 @@ export default function AdminView({ salesmen, onRefresh }) {
     if (!newSalesmanId) return;
     setSaving(true);
     await supabase.from("dealers").update({ salesman_id: newSalesmanId }).eq("id", dealerId);
-    setShowTransfer(null);
-    setSaving(false);
-    fetchAll();
+    setShowTransfer(null); setSaving(false); fetchAll();
   };
 
   const saveBill = async (billId) => {
     setSaving(true);
     await supabase.from("bills").update({
-      bill_no: editBillData.bill_no,
-      amount: parseFloat(editBillData.amount),
-      balance: parseFloat(editBillData.balance),
-      bill_date: editBillData.bill_date,
+      bill_no: editBillData.bill_no, amount: parseFloat(editBillData.amount),
+      balance: parseFloat(editBillData.balance), bill_date: editBillData.bill_date,
     }).eq("id", billId);
-    setEditingBill(null);
-    setEditBillData({});
-    setSaving(false);
-    fetchAll();
+    setEditingBill(null); setEditBillData({}); setSaving(false); fetchAll();
   };
 
   const deleteBill = async (billId) => {
     if (!window.confirm("Delete this bill permanently?")) return;
     setSaving(true);
     await supabase.from("bills").delete().eq("id", billId);
-    setSaving(false);
-    fetchAll();
+    setSaving(false); fetchAll();
   };
+
+  const viewPDF = async (bill) => {
     if (!bill.pdf_path) return;
-    try { const url = await getBillPDFUrl(bill.pdf_path); setViewingPDF({ url, bill_no: bill.bill_no }); }
-    catch { alert("Could not load PDF."); }
+    try {
+      const url = await getBillPDFUrl(bill.pdf_path);
+      setViewingPDF({ url, bill_no: bill.bill_no });
+    } catch { alert("Could not load PDF."); }
   };
 
   const card = { background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" };
@@ -255,7 +234,6 @@ export default function AdminView({ salesmen, onRefresh }) {
   return (
     <div className="fade-in">
 
-      {/* PDF Viewer Modal */}
       {viewingPDF && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", flexDirection: "column" }}>
           <div style={{ background: "#1e1c2e", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -266,7 +244,6 @@ export default function AdminView({ salesmen, onRefresh }) {
         </div>
       )}
 
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
         <div>
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.12em", color: "var(--accent)", marginBottom: 4 }}>TOTAL OUTSTANDING</div>
@@ -279,7 +256,6 @@ export default function AdminView({ salesmen, onRefresh }) {
         </div>
       </div>
 
-      {/* Cheque float summary */}
       {grandCheque > 0 && (
         <div style={{ background: "#fffbeb", border: "1px solid #d4a820", borderRadius: 10, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 16 }}>🟡</span>
@@ -290,10 +266,8 @@ export default function AdminView({ salesmen, onRefresh }) {
         </div>
       )}
 
-      {/* Weekly Leaderboard */}
       <AdminWeeklyLeaderboard salesmen={salesmen} />
 
-      {/* Add salesman */}
       {showAddSalesman && (
         <div className="slide-in" style={{ ...card, padding: 16, marginBottom: 16 }}>
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.12em", color: "var(--accent)", marginBottom: 10 }}>NEW SALESMAN</div>
@@ -307,11 +281,9 @@ export default function AdminView({ salesmen, onRefresh }) {
       )}
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: 60, fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#888888" }}>LOADING...</div>
+        <div style={{ textAlign: "center", padding: 60, fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#888" }}>LOADING...</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-
-          {/* Search */}
           <div style={{ position: "relative" }}>
             <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 15, color: "#aaa" }}>🔍</span>
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search dealer name..."
@@ -334,14 +306,14 @@ export default function AdminView({ salesmen, onRefresh }) {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{sm.name}</div>
-                    <div style={{ fontSize: 13, color: "#888888" }}>
+                    <div style={{ fontSize: 13, color: "#888" }}>
                       {filteredDealers.length} dealer{filteredDealers.length !== 1 ? "s" : ""}
                       {smCheque > 0 && <span style={{ marginLeft: 8, color: "#92640a" }}>· 🟡 {fmt(smCheque)} CHQ</span>}
                     </div>
                   </div>
                   <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 15, fontWeight: 500, color: smTotal > 0 ? "#a32d2d" : "#2d6a2d" }}>{fmt(smTotal)}</div>
                   <button onClick={(e) => { e.stopPropagation(); generateAgeingReport(sm.name, sm.dealers); }} style={{ padding: "4px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 9, borderRadius: 4, border: "1px solid #e2e8f0", background: "#ffffff", color: "#888", cursor: "pointer" }}>⬇</button>
-                  <span style={{ fontSize: 13, color: "#888888" }}>{isOpen ? "▲" : "▼"}</span>
+                  <span style={{ fontSize: 13, color: "#888" }}>{isOpen ? "▲" : "▼"}</span>
                 </div>
 
                 {isOpen && (
@@ -372,16 +344,17 @@ export default function AdminView({ salesmen, onRefresh }) {
                       const isDealerOpen = expandedDealer[dealer.id];
                       const pending = pendingCheques(dealer.cheques || []);
                       const bounced = (dealer.cheques || []).filter(c => c.status === "bounced");
+                      const dot = paymentDot(dealer.bills);
 
                       return (
                         <div key={dealer.id} style={{ borderBottom: di < filteredDealers.length - 1 ? "1px solid #f0eef8" : "none", borderLeft: "3px solid " + sc }}>
                           <div style={{ padding: "12px 16px 12px 20px", display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: dealer.area ? 2 : 0 }}>
-                                <div style={{ width: 16, height: 16, borderRadius: "50%", background: paymentDot(dealer.bills).color, flexShrink: 0 }} title={paymentDot(dealer.bills).title} />
+                                <div style={{ width: 16, height: 16, borderRadius: "50%", background: dot.color, flexShrink: 0 }} title={dot.title} />
                                 <div style={{ fontSize: 15, fontWeight: 500, color: "#8b4513" }}>{dealer.name}</div>
                               </div>
-                              {dealer.area && <div style={{ fontSize: 13, color: "#888888" }}>{dealer.area}</div>}
+                              {dealer.area && <div style={{ fontSize: 13, color: "#888" }}>{dealer.area}</div>}
 
                               {pending.length > 0 && (
                                 <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
@@ -423,9 +396,9 @@ export default function AdminView({ salesmen, onRefresh }) {
                                 {bal > 0 && <div><span style={{ fontSize: 13, padding: "2px 7px", borderRadius: 6, background: bucket.bg, color: bucket.color, border: "1px solid " + bucket.border }}>{bucket.label}</span></div>}
                               </div>
                               <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                                <button onClick={() => { setShowPayment(dealer.id); setShowAddBill(null); setShowAddCheque(null); }} style={{ ...btnP, padding: "4px 10px", fontSize: 10 }}>+ Payment</button>
-                                <button onClick={() => { setShowAddCheque(dealer.id); setShowAddBill(null); setShowPayment(null); }} style={btnAmber}>+ Cheque</button>
-                                <button onClick={() => { setShowAddBill(null); setShowAddCheque(null); setShowPayment(null); setShowTransfer(showTransfer === dealer.id ? null : dealer.id); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>⇄ Transfer</button>
+                                <button onClick={() => { setShowPayment(dealer.id); setShowAddBill(null); setShowAddCheque(null); setShowTransfer(null); }} style={{ ...btnP, padding: "4px 10px", fontSize: 10 }}>+ Payment</button>
+                                <button onClick={() => { setShowAddCheque(dealer.id); setShowAddBill(null); setShowPayment(null); setShowTransfer(null); }} style={btnAmber}>+ Cheque</button>
+                                <button onClick={() => { setShowTransfer(showTransfer === dealer.id ? null : dealer.id); setShowAddBill(null); setShowAddCheque(null); setShowPayment(null); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>⇄ Transfer</button>
                                 <button onClick={() => openAddBill(dealer.id)} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>+ Bill</button>
                                 <button onClick={() => toggleDealer(dealer.id)} style={{ ...btnG, padding: "4px 8px", fontSize: 11 }}>
                                   {dealer.bills.length} bills {isDealerOpen ? "▲" : "▼"}
@@ -449,7 +422,6 @@ export default function AdminView({ salesmen, onRefresh }) {
                                   ))}
                                 </div>
                               </div>
-
                               {payMode === "fifo" ? (
                                 <>
                                   <div style={{ display: "flex", gap: 8 }}>
@@ -468,11 +440,9 @@ export default function AdminView({ salesmen, onRefresh }) {
                                           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#6b2f0a" }}>{bill.bill_no}</div>
                                           <div style={{ fontSize: 11, color: "#888" }}>Balance: {fmt(bill.balance)}</div>
                                         </div>
-                                        <input type="number" placeholder="0"
-                                          style={{ ...inp, width: 110, fontSize: 13 }}
+                                        <input type="number" placeholder="0" style={{ ...inp, width: 110, fontSize: 13 }}
                                           value={billAllocations[bill.id] || ""}
-                                          onChange={e => setBillAllocations(a => ({ ...a, [bill.id]: e.target.value }))}
-                                        />
+                                          onChange={e => setBillAllocations(a => ({ ...a, [bill.id]: e.target.value }))} />
                                       </div>
                                     ))}
                                   </div>
@@ -490,25 +460,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                             </div>
                           )}
 
-                          {showTransfer === dealer.id && (
-                            <div style={{ padding: "12px 16px 12px 20px", background: "#f0f7ff", borderTop: "1px solid #e2e8f0" }}>
-                              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#1d4ed8", marginBottom: 8 }}>TRANSFER TO SALESMAN</div>
-                              <div style={{ display: "flex", gap: 8 }}>
-                                <select id={`transfer-${dealer.id}`} style={{ ...inp, flex: 1 }} defaultValue="">
-                                  <option value="">— Select salesman —</option>
-                                  {salesmen.filter(s => !data.find(d => d.id === s.id && d.dealers.find(dl => dl.id === dealer.id))).map(s => (
-                                    <option key={s.id} value={s.id}>{s.name}</option>
-                                  ))}
-                                </select>
-                                <button disabled={saving} style={{ ...btnP, background: "#1d4ed8" }}
-                                  onClick={() => {
-                                    const sel = document.getElementById(`transfer-${dealer.id}`);
-                                    if (sel?.value) transferDealer(dealer.id, sel.value);
-                                  }}>MOVE</button>
-                                <button onClick={() => setShowTransfer(null)} style={btnG}>✕</button>
-                              </div>
-                            </div>
-                          )}
+                          {showAddCheque === dealer.id && (
                             <div style={{ padding: "12px 16px 12px 20px", background: "#fffbeb", borderTop: "1px solid #f0d860" }}>
                               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#92640a", marginBottom: 8 }}>LOG CHEQUE</div>
                               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -521,12 +473,29 @@ export default function AdminView({ salesmen, onRefresh }) {
                             </div>
                           )}
 
+                          {showTransfer === dealer.id && (
+                            <div style={{ padding: "12px 16px 12px 20px", background: "#f0f7ff", borderTop: "1px solid #e2e8f0" }}>
+                              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#1d4ed8", marginBottom: 8 }}>TRANSFER TO SALESMAN</div>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <select id={`transfer-${dealer.id}`} style={{ ...inp, flex: 1 }} defaultValue="">
+                                  <option value="">— Select salesman —</option>
+                                  {salesmen.filter(s => !data.find(d => d.id === s.id && d.dealers.find(dl => dl.id === dealer.id))).map(s => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                  ))}
+                                </select>
+                                <button disabled={saving} style={{ ...btnP, background: "#1d4ed8" }}
+                                  onClick={() => { const sel = document.getElementById(`transfer-${dealer.id}`); if (sel?.value) transferDealer(dealer.id, sel.value); }}>MOVE</button>
+                                <button onClick={() => setShowTransfer(null)} style={btnG}>✕</button>
+                              </div>
+                            </div>
+                          )}
+
                           {showAddBill === dealer.id && (
                             <div style={{ padding: "12px 16px 12px 20px", background: "#f8fafc", borderTop: "1px solid #e5e3f0" }}>
                               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 10 }}>ADD BILL</div>
                               <div onClick={() => fileInputRef.current?.click()} style={{ border: "2px dashed #c8c4e0", borderRadius: 10, padding: "14px", textAlign: "center", cursor: "pointer", background: pendingPDF?.file ? "#f8fafc" : "#ffffff", marginBottom: 10 }}>
                                 <input ref={fileInputRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={handlePDFSelect} />
-                                {!pendingPDF && <div style={{ fontSize: 13, color: "#888888" }}>📄 Upload Tally Invoice PDF to auto-fill fields</div>}
+                                {!pendingPDF && <div style={{ fontSize: 13, color: "#888" }}>📄 Upload Tally Invoice PDF to auto-fill fields</div>}
                                 {pendingPDF?.extracting && <div style={{ fontSize: 13, color: "var(--accent)", fontFamily: "'IBM Plex Mono'" }}>⏳ Extracting fields...</div>}
                                 {pendingPDF?.file && !pendingPDF.extracting && (
                                   <div style={{ fontSize: 13, color: "#8b4513" }}>
@@ -579,12 +548,12 @@ export default function AdminView({ salesmen, onRefresh }) {
                                   <div key={bill.id} style={{ padding: "8px 16px 8px 36px", borderTop: "1px solid #f0eef8", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
                                     <div>
                                       <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#8b4513" }}>{bill.bill_no}</span>
-                                      <span style={{ fontSize: 13, color: "#888888", marginLeft: 8 }}>{fmtDate(bill.bill_date)}</span>
+                                      <span style={{ fontSize: 13, color: "#888", marginLeft: 8 }}>{fmtDate(bill.bill_date)}</span>
                                       {bill.pdf_path && <button onClick={() => viewPDF(bill)} style={{ marginLeft: 8, background: "none", border: "none", cursor: "pointer", fontSize: 13 }} title="View PDF">📄</button>}
                                     </div>
                                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                       <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12 }}>Bal: {fmt(bill.balance)}</span>
-                                      <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#888888" }}>/ {fmt(bill.amount)}</span>
+                                      <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, color: "#888" }}>/ {fmt(bill.amount)}</span>
                                       <span style={{ fontSize: 13, padding: "2px 7px", borderRadius: 6, background: bkt.bg, color: bkt.color, border: "1px solid " + bkt.border }}>{days}d</span>
                                       <button onClick={() => { setEditingBill(bill.id); setEditBillData({ bill_no: bill.bill_no, amount: bill.amount, balance: bill.balance, bill_date: bill.bill_date }); }}
                                         style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#888" }} title="Edit bill">✏️</button>
