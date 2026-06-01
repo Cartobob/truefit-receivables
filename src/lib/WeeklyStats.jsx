@@ -149,6 +149,7 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
   const [weekData, setWeekData] = useState([]);
   const [monthData, setMonthData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [weekLabel2, setWeekLabel2] = useState("");
   const [monthLabel2, setMonthLabel2] = useState("");
 
@@ -199,6 +200,7 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
       setLoading(false);
       } catch(e) {
         console.error("Leaderboard error:", e);
+        setError(e.message);
         setLoading(false);
       }
     }
@@ -207,6 +209,10 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
 
   if (loading) return (
     <div style={{ textAlign: "center", padding: 20, fontFamily: "'IBM Plex Mono'", fontSize: 11, color: "#888" }}>Loading stats...</div>
+  );
+
+  if (error) return (
+    <div style={{ padding: 12, fontFamily: "'IBM Plex Mono'", fontSize: 11, color: "#dc2626", marginBottom: 16 }}>Stats error: {error}</div>
   );
 
   const table = (rows, label) => (
