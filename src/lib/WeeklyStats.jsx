@@ -214,18 +214,24 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
         ))}
       </div>
       {rows.map((r, i) => (
-        <div key={r.name} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 16px", borderBottom: i < rows.length - 1 ? "1px solid #f1f5f9" : "none", alignItems: "center" }}>
+        <div key={r.name} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 16px", borderBottom: "1px solid #f1f5f9", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {i === 0 && <span style={{ fontSize: 14 }}>🥇</span>}
             {i === 1 && <span style={{ fontSize: 14 }}>🥈</span>}
             {i === 2 && <span style={{ fontSize: 14 }}>🥉</span>}
             {i > 2 && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: "#aaa", width: 22, textAlign: "center" }}>{i + 1}</span>}
-            <span style={{ fontSize: 14, fontWeight: i === 0 ? 600 : 400, color: "#6b2f0a" }}>{r.name}</span>
+            <span style={{ fontSize: 14, fontWeight: i === 0 ? 600 : 400, color: "#6b2f0a" }}>{displayName(r.name)}</span>
           </div>
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: i === 0 ? 600 : 400, color: "#6b2f0a", textAlign: "right" }}>{fmtShort(r.sales)}</div>
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: i === 0 ? 600 : 400, color: "#166534", textAlign: "right" }}>{fmtShort(r.collections)}</div>
         </div>
       ))}
+      {/* Totals row */}
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 16px", background: "#fdf0e8", borderTop: "2px solid #e2e8f0", alignItems: "center" }}>
+        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, color: "#6b2f0a", letterSpacing: "0.08em" }}>TOTAL</div>
+        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: "#6b2f0a", textAlign: "right" }}>{fmtShort(rows.reduce((s, r) => s + r.sales, 0))}</div>
+        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: "#166534", textAlign: "right" }}>{fmtShort(rows.reduce((s, r) => s + r.collections, 0))}</div>
+      </div>
     </div>
   );
 
