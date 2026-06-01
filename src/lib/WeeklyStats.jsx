@@ -153,7 +153,8 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
   const [monthLabel2, setMonthLabel2] = useState("");
 
   useEffect(() => {
-    if (!salesmen || salesmen.length === 0) return;
+    if (!salesmen || salesmen.length === 0) { setLoading(false); return; }
+    setLoading(true);
     async function load() {
       try {
       const { data: allDealers } = await supabase.from("dealers").select("id, salesman_id");
