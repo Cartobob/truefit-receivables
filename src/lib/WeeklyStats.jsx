@@ -153,7 +153,9 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
   const [monthLabel2, setMonthLabel2] = useState("");
 
   useEffect(() => {
+    if (!salesmen || salesmen.length === 0) return;
     async function load() {
+      try {
       const { data: allDealers } = await supabase.from("dealers").select("id, salesman_id");
       const dealerMap = {};
       (allDealers || []).forEach(d => {
@@ -194,6 +196,10 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
       setWeekData(wRows.sort((a, b) => b.sales - a.sales));
       setMonthData(mRows.sort((a, b) => b.sales - a.sales));
       setLoading(false);
+      } catch(e) {
+        console.error("Leaderboard error:", e);
+        setLoading(false);
+      }
     }
     load();
   }, [salesmen]);
