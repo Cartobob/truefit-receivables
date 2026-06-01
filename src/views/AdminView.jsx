@@ -266,7 +266,7 @@ export default function AdminView({ salesmen, onRefresh }) {
         </div>
       )}
 
-      <AdminWeeklyLeaderboard salesmen={salesmen} />
+      {/* <AdminWeeklyLeaderboard salesmen={salesmen} /> */}
 
       {showAddSalesman && (
         <div className="slide-in" style={{ ...card, padding: 16, marginBottom: 16 }}>
