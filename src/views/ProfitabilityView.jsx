@@ -125,9 +125,9 @@ export default function ProfitabilityView({ salesmen }) {
       <td style="padding:8px 12px;text-align:right">${fmt(r.salary)}</td>
       <td style="padding:8px 12px;text-align:right">${fmt(r.expTotal)}</td>
       <td style="padding:8px 12px;text-align:right">${fmt(r.totalCost)}</td>
-      <td style="padding:8px 12px;text-align:right;font-weight:600;color:${r.net>=0?'#166534':'#8b1a1a'}">${fmt(r.net)}</td>
+      <td style="padding:8px 12px;text-align:right;font-weight:600;color:${r.net>=0?'#166534':'#ea580c'}">${fmt(r.net)}</td>
       <td style="padding:8px 12px;text-align:right">${r.collectionEfficiency.toFixed(1)}%</td>
-      <td style="padding:8px 12px;text-align:right;color:${r.overdue60Ratio<=30?'#166534':'#8b1a1a'}">${r.overdue60Ratio.toFixed(1)}%</td>
+      <td style="padding:8px 12px;text-align:right;color:${r.overdue60Ratio<=30?'#166534':'#ea580c'}">${r.overdue60Ratio.toFixed(1)}%</td>
     </tr>`).join("");
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Monthly Summary</title>
 <style>body{font-family:'IBM Plex Sans',sans-serif;padding:32px 40px;color:#111}
@@ -135,9 +135,9 @@ export default function ProfitabilityView({ salesmen }) {
 table{width:100%;border-collapse:collapse;margin-top:24px}
 th{background:#f0f2f5;padding:8px 12px;text-align:right;font-size:11px;letter-spacing:.08em;color:#666;font-weight:500}
 th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px}
-.tot td{background:#fdf0e8;font-weight:600;border-top:2px solid #6b2f0a}</style></head><body>
-<div style="display:flex;justify-content:space-between;border-bottom:3px solid #6b2f0a;padding-bottom:12px;margin-bottom:8px">
-<div><div style="font-family:'IBM Plex Mono';font-size:13px;letter-spacing:.2em;color:#6b2f0a;margin-bottom:4px">TRUEFIT SKIM COAT PRODUCTS</div>
+.tot td{background:#f1f5f9;font-weight:600;border-top:2px solid #334155}</style></head><body>
+<div style="display:flex;justify-content:space-between;border-bottom:3px solid #334155;padding-bottom:12px;margin-bottom:8px">
+<div><div style="font-family:'IBM Plex Mono';font-size:13px;letter-spacing:.2em;color:#334155;margin-bottom:4px">TRUEFIT SKIM COAT PRODUCTS</div>
 <div style="font-size:22px;font-weight:600">Monthly Summary — ${monthLabel(selectedMonth)}</div></div>
 <div style="font-family:'IBM Plex Mono';font-size:11px;color:#888">${today}</div></div>
 <table><thead><tr>
@@ -149,7 +149,7 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
 <td style="padding:8px 12px;text-align:right">—</td><td style="padding:8px 12px;text-align:right">—</td>
 <td style="padding:8px 12px;text-align:right">—</td><td style="padding:8px 12px;text-align:right">—</td>
 <td style="padding:8px 12px;text-align:right">${fmt(tCost)}</td>
-<td style="padding:8px 12px;text-align:right;color:${tNet>=0?'#166534':'#8b1a1a'}">${fmt(tNet)}</td>
+<td style="padding:8px 12px;text-align:right;color:${tNet>=0?'#166534':'#ea580c'}">${fmt(tNet)}</td>
 <td style="padding:8px 12px;text-align:right">—</td><td style="padding:8px 12px;text-align:right">—</td>
 </tr></tbody></table></body></html>`;
     const win = window.open("","_blank");
@@ -158,8 +158,8 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
     win.onload = () => win.print();
   };
 
-  const inp = { background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:6,padding:"9px 12px",fontSize:14,color:"#6b2f0a",width:"100%",fontFamily:"'IBM Plex Sans'" };
-  const btnP = { padding:"7px 14px",fontFamily:"'IBM Plex Mono'",fontSize:11,borderRadius:6,border:"none",background:"#6b2f0a",color:"#ffffff",letterSpacing:"0.08em",cursor:"pointer" };
+  const inp = { background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:6,padding:"9px 12px",fontSize:14,color:"#334155",width:"100%",fontFamily:"'IBM Plex Sans'" };
+  const btnP = { padding:"7px 14px",fontFamily:"'IBM Plex Mono'",fontSize:11,borderRadius:6,border:"none",background:"#334155",color:"#ffffff",letterSpacing:"0.08em",cursor:"pointer" };
   const btnG = { padding:"7px 10px",fontFamily:"'IBM Plex Mono'",fontSize:11,borderRadius:6,border:"1px solid #e2e8f0",background:"#ffffff",color:"#888",cursor:"pointer" };
   const btnAmber = { padding:"5px 10px",fontFamily:"'IBM Plex Mono'",fontSize:10,borderRadius:5,border:"1px solid #d4a820",background:"#fffbeb",color:"#92640a",cursor:"pointer" };
   const btnRed = { padding:"5px 10px",fontFamily:"'IBM Plex Mono'",fontSize:10,borderRadius:5,border:"1px solid #fecaca",background:"#fff5f5",color:"#dc2626",cursor:"pointer" };
@@ -173,7 +173,7 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:10 }}>
         <div style={{ display:"flex",alignItems:"center",gap:10 }}>
           <button onClick={() => changeMonth(-1)} style={btnG}>◀</button>
-          <span style={{ fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:500,color:"#6b2f0a",minWidth:140,textAlign:"center" }}>{monthLabel(selectedMonth)}</span>
+          <span style={{ fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:500,color:"#334155",minWidth:140,textAlign:"center" }}>{monthLabel(selectedMonth)}</span>
           <button onClick={() => changeMonth(1)} style={btnG}>▶</button>
         </div>
         <div style={{ display:"flex",gap:8 }}>
@@ -184,9 +184,9 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
 
       <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20 }}>
         {[
-          { label:"TOTAL SALES",val:totalSales,color:"#6b2f0a" },
+          { label:"TOTAL SALES",val:totalSales,color:"#334155" },
           { label:"COLLECTIONS",val:totalColl,color:"#166534" },
-          { label:"NET P&L",val:totalNet,color:totalNet>=0?"#166534":"#8b1a1a" },
+          { label:"NET P&L",val:totalNet,color:totalNet>=0?"#166534":"#ea580c" },
         ].map(s => (
           <div key={s.label} style={{ background:"#ffffff",border:"1px solid #e2e8f0",borderRadius:10,padding:"12px 14px",boxShadow:"0 1px 3px rgba(0,0,0,0.04)" }}>
             <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:9,letterSpacing:"0.12em",color:"#888",marginBottom:4 }}>{s.label}</div>
@@ -200,10 +200,10 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
       ) : (
         <div style={{ display:"flex",flexDirection:"column",gap:12 }}>
           {data.map(({ sm,sales,collections,salary,expTotal,outstanding,interestCost,totalCost,net,collectionEfficiency,overdue60Ratio,costPerRupee,smExpenses }) => (
-            <div key={sm.id} style={{ background:"#ffffff",border:"1px solid #e2e8f0",borderRadius:10,overflow:"hidden",boxShadow:"0 1px 3px rgba(0,0,0,0.04)",borderLeft:`3px solid ${net>=0?'#6b2f0a':'#dc2626'}` }}>
+            <div key={sm.id} style={{ background:"#ffffff",border:"1px solid #e2e8f0",borderRadius:10,overflow:"hidden",boxShadow:"0 1px 3px rgba(0,0,0,0.04)",borderLeft:`3px solid ${net>=0?'#334155':'#dc2626'}` }}>
               <div style={{ padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10 }}>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:15,fontWeight:600,color:"#6b2f0a",marginBottom:10 }}>{sm.name}</div>
+                  <div style={{ fontSize:15,fontWeight:600,color:"#334155",marginBottom:10 }}>{sm.name}</div>
                   <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:"5px 24px",marginBottom:10 }}>
                     {[
                       { label:"Sales",val:fmt(sales) },
@@ -215,7 +215,7 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
                     ].map(({ label,val,dim }) => (
                       <div key={label}>
                         <span style={{ fontFamily:"'IBM Plex Mono'",fontSize:9,letterSpacing:"0.1em",color:"#888" }}>{label.toUpperCase()} </span>
-                        <span style={{ fontFamily:"'IBM Plex Mono'",fontSize:13,color:dim?"#aaa":"#6b2f0a" }}>{val}</span>
+                        <span style={{ fontFamily:"'IBM Plex Mono'",fontSize:13,color:dim?"#aaa":"#334155" }}>{val}</span>
                       </div>
                     ))}
                   </div>
@@ -227,15 +227,15 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
                     ].map(({ label,val,good }) => (
                       <div key={label} style={{ background:collections>0?(good?"#f0fdf4":"#fdf0f0"):"#f8fafc",border:`1px solid ${collections>0?(good?"#bbf7d0":"#fecaca"):"#e2e8f0"}`,borderRadius:6,padding:"4px 10px" }}>
                         <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:8,letterSpacing:"0.1em",color:"#888" }}>{label.toUpperCase()}</div>
-                        <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:600,color:collections>0?(good?"#166534":"#8b1a1a"):"#aaa" }}>{val}</div>
+                        <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:13,fontWeight:600,color:collections>0?(good?"#166534":"#ea580c"):"#aaa" }}>{val}</div>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div style={{ textAlign:"right" }}>
                   <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:9,letterSpacing:"0.1em",color:"#888",marginBottom:4 }}>NET</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:22,fontWeight:600,color:net>=0?"#166534":"#8b1a1a" }}>{fmt(net)}</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:9,color:net>=0?"#166534":"#8b1a1a" }}>{net>=0?"▲ PROFITABLE":"▼ LOSS"}</div>
+                  <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:22,fontWeight:600,color:net>=0?"#166534":"#ea580c" }}>{fmt(net)}</div>
+                  <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:9,color:net>=0?"#166534":"#ea580c" }}>{net>=0?"▲ PROFITABLE":"▼ LOSS"}</div>
                 </div>
               </div>
               <div style={{ padding:"0 16px 12px",display:"flex",gap:8 }}>
@@ -243,8 +243,8 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
                 <button onClick={() => { setShowExpense(sm.id); setShowSalary(null); }} style={btnAmber}>+ Expense</button>
               </div>
               {showSalary===sm.id && (
-                <div style={{ padding:"12px 16px",background:"#fdf0e8",borderTop:"1px solid #e2e8f0" }}>
-                  <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:9,letterSpacing:"0.1em",color:"#6b2f0a",marginBottom:8 }}>SALARY FOR {monthLabel(selectedMonth).toUpperCase()}</div>
+                <div style={{ padding:"12px 16px",background:"#f1f5f9",borderTop:"1px solid #e2e8f0" }}>
+                  <div style={{ fontFamily:"'IBM Plex Mono'",fontSize:9,letterSpacing:"0.1em",color:"#334155",marginBottom:8 }}>SALARY FOR {monthLabel(selectedMonth).toUpperCase()}</div>
                   <div style={{ display:"flex",gap:8 }}>
                     <input type="number" style={{ ...inp,flex:1 }} placeholder="Amount" value={salaryAmt} onChange={e=>setSalaryAmt(e.target.value)} />
                     <button onClick={()=>saveSalary(sm.id)} disabled={saving} style={btnP}>SAVE</button>
@@ -267,7 +267,7 @@ th:first-child{text-align:left}td{border-bottom:1px solid #e2e8f0;font-size:13px
                     <div style={{ marginTop:10 }}>
                       {smExpenses.map(e => (
                         <div key={e.id} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #f0e8d0",fontSize:13 }}>
-                          <span style={{ color:"#6b2f0a" }}>{e.note||"Expense"}</span>
+                          <span style={{ color:"#334155" }}>{e.note||"Expense"}</span>
                           <div style={{ display:"flex",gap:8,alignItems:"center" }}>
                             <span style={{ fontFamily:"'IBM Plex Mono'",fontSize:12 }}>{fmt(e.amount)}</span>
                             <button onClick={()=>deleteExpense(e.id)} style={{ ...btnRed,padding:"2px 7px" }}>✕</button>
