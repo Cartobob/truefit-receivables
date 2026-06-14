@@ -517,10 +517,10 @@ export default function AdminView({ salesmen, onRefresh }) {
                               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#dc2626", marginBottom: 8 }}>ADD CREDIT NOTE</div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                 <div style={{ display: "flex", gap: 8 }}>
-                                  <input type="number" style={{ ...inp, flex: 1 }} placeholder="Amount" value={newCreditNote.amount} onChange={e => setNewCreditNote(n => ({ ...n, amount: e.target.value }))} />
-                                  <input type="date" style={{ ...inp, flex: 1 }} value={newCreditNote.credit_date} onChange={e => setNewCreditNote(n => ({ ...n, credit_date: e.target.value }))} />
+                                  <input type="number" style={{ flex: 1, padding: "9px 12px", border: "1px solid #fecaca", borderRadius: 6, fontSize: 14, background: "#ffffff", color: "#111" }} placeholder="Amount" value={newCreditNote.amount} onChange={e => setNewCreditNote(n => ({ ...n, amount: e.target.value }))} />
+                                  <input type="date" style={{ flex: 1, padding: "9px 12px", border: "1px solid #fecaca", borderRadius: 6, fontSize: 14, background: "#ffffff", color: "#111" }} value={newCreditNote.credit_date} onChange={e => setNewCreditNote(n => ({ ...n, credit_date: e.target.value }))} />
                                 </div>
-                                <input style={inp} placeholder="Reason (e.g. return, discount)" value={newCreditNote.note} onChange={e => setNewCreditNote(n => ({ ...n, note: e.target.value }))} />
+                                <input style={{ padding: "9px 12px", border: "1px solid #fecaca", borderRadius: 6, fontSize: 14, background: "#ffffff", color: "#111", width: "100%" }} placeholder="Reason (e.g. return, discount)" value={newCreditNote.note} onChange={e => setNewCreditNote(n => ({ ...n, note: e.target.value }))} />
                                 <div style={{ display: "flex", gap: 8 }}>
                                   <button onClick={() => addCreditNote(dealer.id)} disabled={saving} style={{ ...btnP, flex: 1, background: "#dc2626" }}>SAVE</button>
                                   <button onClick={() => setShowCreditNote(null)} style={btnG}>✕</button>
@@ -542,7 +542,7 @@ export default function AdminView({ salesmen, onRefresh }) {
                                   <input type="date" style={inp} value={stmtRange.end} onChange={e => setStmtRange(r => ({ ...r, end: e.target.value }))} />
                                 </div>
                                 <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-                                  <button onClick={() => generateDealerStatement(dealer, stmtRange.start, stmtRange.end)} style={{ ...btnP, background: "#166534" }}>GENERATE</button>
+                                  <button onClick={() => generateDealerStatement(dealer, stmtRange.start, stmtRange.end)} style={{ ...btnP, background: "#166534" }}>⬇ SAVE AS PDF</button>
                                   <button onClick={() => setShowStatement(null)} style={btnG}>✕</button>
                                 </div>
                               </div>

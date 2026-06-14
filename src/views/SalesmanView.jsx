@@ -219,7 +219,7 @@ export default function SalesmanView({ salesman }) {
                         <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, color: "#888", marginBottom: 3 }}>TO</div>
                         <input type="date" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, background: "#ffffff", color: "#166534" }} value={stmtRange.end} onChange={e => setStmtRange(r => ({ ...r, end: e.target.value }))} />
                       </div>
-                      <button onClick={() => generateDealerStatement(dealer, stmtRange.start, stmtRange.end)} style={{ padding: "8px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 11, borderRadius: 6, border: "none", background: "#166534", color: "#ffffff", cursor: "pointer" }}>GENERATE</button>
+                      <button onClick={() => generateDealerStatement(dealer, stmtRange.start, stmtRange.end)} style={{ padding: "8px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 11, borderRadius: 6, border: "none", background: "#166534", color: "#ffffff", cursor: "pointer" }}>⬇ SAVE AS PDF</button>
                       <button onClick={() => setShowStatement(null)} style={{ padding: "8px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 11, borderRadius: 6, border: "1px solid #e2e8f0", background: "#ffffff", color: "#888", cursor: "pointer" }}>✕</button>
                     </div>
                   </div>
