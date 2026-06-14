@@ -4,6 +4,7 @@ import { fmt, fmtDate, totalBalance, worstBucket, ageDays, ageBucket, stripColor
 import { extractInvoiceFromPDF } from "../lib/extractInvoice";
 import { uploadBillPDF, getBillPDFUrl, cleanupSettledBillPDFs } from "../lib/pdfStorage";
 import { generateAgeingReport } from "../lib/ageingReport";
+import { generateDealerStatement } from "../lib/dealerStatement";
 import { AdminWeeklyLeaderboard } from "../lib/WeeklyStats";
 
 export default function AdminView({ salesmen, onRefresh }) {
@@ -22,6 +23,10 @@ export default function AdminView({ salesmen, onRefresh }) {
   const [billAllocations, setBillAllocations] = useState({});
   const [showTransfer, setShowTransfer] = useState(null);
   const [editingBill, setEditingBill] = useState(null);
+  const [showCreditNote, setShowCreditNote] = useState(null);
+  const [newCreditNote, setNewCreditNote] = useState({ amount: "", note: "", credit_date: "" });
+  const [showStatement, setShowStatement] = useState(null);
+  const [stmtRange, setStmtRange] = useState({ start: "", end: "" });
   const [editBillData, setEditBillData] = useState({});
   const [showBounceNote, setShowBounceNote] = useState(null);
   const [newSalesman, setNewSalesman] = useState({ name: "", password: "" });
@@ -210,6 +215,21 @@ export default function AdminView({ salesmen, onRefresh }) {
     setSaving(false); fetchAll();
   };
 
+  const addCreditNote = async (dealerId) => {
+    if (!newCreditNote.amount || !newCreditNote.credit_date) return;
+    setSaving(true);
+    await supabase.from("credit_notes").insert({
+      dealer_id: dealerId,
+      amount: parseFloat(newCreditNote.amount),
+      note: newCreditNote.note || null,
+      credit_date: newCreditNote.credit_date
+    });
+    setNewCreditNote({ amount: "", note: "", credit_date: "" });
+    setShowCreditNote(null);
+    setSaving(false);
+    fetchAll();
+  };
+
   const viewPDF = async (bill) => {
     if (!bill.pdf_path) return;
     try {
@@ -266,7 +286,7 @@ export default function AdminView({ salesmen, onRefresh }) {
         </div>
       )}
 
-      <AdminWeeklyLeaderboard salesmen={salesmen} /> 
+      <AdminWeeklyLeaderboard salesmen={salesmen} />
 
       {showAddSalesman && (
         <div className="slide-in" style={{ ...card, padding: 16, marginBottom: 16 }}>
@@ -396,12 +416,14 @@ export default function AdminView({ salesmen, onRefresh }) {
                                 {bal > 0 && <div><span style={{ fontSize: 13, padding: "2px 7px", borderRadius: 6, background: bucket.bg, color: bucket.color, border: "1px solid " + bucket.border }}>{bucket.label}</span></div>}
                               </div>
                               <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                                <button onClick={() => { setShowPayment(dealer.id); setShowAddBill(null); setShowAddCheque(null); setShowTransfer(null); }} style={{ ...btnP, padding: "4px 10px", fontSize: 10 }}>+ Payment</button>
-                                <button onClick={() => { setShowAddCheque(dealer.id); setShowAddBill(null); setShowPayment(null); setShowTransfer(null); }} style={btnAmber}>+ Cheque</button>
-                                <button onClick={() => { setShowTransfer(showTransfer === dealer.id ? null : dealer.id); setShowAddBill(null); setShowAddCheque(null); setShowPayment(null); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>⇄ Transfer</button>
+                                <button onClick={() => { setShowPayment(dealer.id); setShowAddBill(null); setShowAddCheque(null); setShowTransfer(null); setShowCreditNote(null); setShowStatement(null); }} style={{ ...btnP, padding: "4px 10px", fontSize: 10 }}>+ Payment</button>
+                                <button onClick={() => { setShowAddCheque(dealer.id); setShowAddBill(null); setShowPayment(null); setShowTransfer(null); setShowCreditNote(null); setShowStatement(null); }} style={btnAmber}>+ Cheque</button>
+                                <button onClick={() => { setShowCreditNote(dealer.id); setShowAddBill(null); setShowPayment(null); setShowAddCheque(null); setShowTransfer(null); setShowStatement(null); setNewCreditNote({ amount: "", note: "", credit_date: "" }); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10, color: "#dc2626", borderColor: "#fecaca" }}>− Credit</button>
+                                <button onClick={() => { setShowStatement(dealer.id); setShowAddBill(null); setShowPayment(null); setShowAddCheque(null); setShowTransfer(null); setShowCreditNote(null); const today = new Date().toISOString().split("T")[0]; const start = new Date(new Date().getFullYear(), 3, 1).toISOString().split("T")[0]; setStmtRange({ start, end: today }); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>📄 Stmt</button>
+                                <button onClick={() => { setShowTransfer(showTransfer === dealer.id ? null : dealer.id); setShowAddBill(null); setShowAddCheque(null); setShowPayment(null); setShowCreditNote(null); setShowStatement(null); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>⇄ Transfer</button>
                                 <button onClick={() => openAddBill(dealer.id)} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>+ Bill</button>
                                 <button onClick={() => toggleDealer(dealer.id)} style={{ ...btnG, padding: "4px 8px", fontSize: 11 }}>
-                                  {dealer.bills.length} bills {isDealerOpen ? "▲" : "▼"}
+                                  {dealer.bills.filter(b => Number(b.balance) > 0).length} bills {isDealerOpen ? "▲" : "▼"}
                                 </button>
                               </div>
                             </div>
@@ -490,6 +512,43 @@ export default function AdminView({ salesmen, onRefresh }) {
                             </div>
                           )}
 
+                          {showCreditNote === dealer.id && (
+                            <div style={{ padding: "12px 16px 12px 20px", background: "#fff5f5", borderTop: "1px solid #fecaca" }}>
+                              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#dc2626", marginBottom: 8 }}>ADD CREDIT NOTE</div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <input type="number" style={{ ...inp, flex: 1 }} placeholder="Amount" value={newCreditNote.amount} onChange={e => setNewCreditNote(n => ({ ...n, amount: e.target.value }))} />
+                                  <input type="date" style={{ ...inp, flex: 1 }} value={newCreditNote.credit_date} onChange={e => setNewCreditNote(n => ({ ...n, credit_date: e.target.value }))} />
+                                </div>
+                                <input style={inp} placeholder="Reason (e.g. return, discount)" value={newCreditNote.note} onChange={e => setNewCreditNote(n => ({ ...n, note: e.target.value }))} />
+                                <div style={{ display: "flex", gap: 8 }}>
+                                  <button onClick={() => addCreditNote(dealer.id)} disabled={saving} style={{ ...btnP, flex: 1, background: "#dc2626" }}>SAVE</button>
+                                  <button onClick={() => setShowCreditNote(null)} style={btnG}>✕</button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {showStatement === dealer.id && (
+                            <div style={{ padding: "12px 16px 12px 20px", background: "#f0fdf4", borderTop: "1px solid #86efac" }}>
+                              <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "#166534", marginBottom: 8 }}>DEALER STATEMENT</div>
+                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, color: "#888", marginBottom: 3 }}>FROM</div>
+                                  <input type="date" style={inp} value={stmtRange.start} onChange={e => setStmtRange(r => ({ ...r, start: e.target.value }))} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, color: "#888", marginBottom: 3 }}>TO</div>
+                                  <input type="date" style={inp} value={stmtRange.end} onChange={e => setStmtRange(r => ({ ...r, end: e.target.value }))} />
+                                </div>
+                                <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                                  <button onClick={() => generateDealerStatement(dealer, stmtRange.start, stmtRange.end)} style={{ ...btnP, background: "#166534" }}>GENERATE</button>
+                                  <button onClick={() => setShowStatement(null)} style={btnG}>✕</button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {showAddBill === dealer.id && (
                             <div style={{ padding: "12px 16px 12px 20px", background: "#f8fafc", borderTop: "1px solid #e5e3f0" }}>
                               <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 10 }}>ADD BILL</div>
@@ -519,7 +578,7 @@ export default function AdminView({ salesmen, onRefresh }) {
 
                           {isDealerOpen && dealer.bills.length > 0 && (
                             <div style={{ background: "#ffffff" }}>
-                              {dealer.bills.sort((a, b) => new Date(a.bill_date) - new Date(b.bill_date)).map((bill) => {
+                              {dealer.bills.filter(b => Number(b.balance) > 0).sort((a, b) => new Date(a.bill_date) - new Date(b.bill_date)).map((bill) => {
                                 const days = ageDays(bill.bill_date);
                                 const bkt = ageBucket(days);
                                 const isEditing = editingBill === bill.id;
