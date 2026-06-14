@@ -96,32 +96,32 @@ export function SalesmanWeeklyCard({ salesmanId }) {
   return (
     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "16px", marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
       <div style={{ marginBottom: 14 }}>
-        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.14em", color: "#888", marginBottom: 8 }}>
+        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, letterSpacing: "0.14em", color: "#888", marginBottom: 8 }}>
           {weekStats.isMonth ? "LAST MONTH" : "LAST WEEK"} · {weekStats.label.toUpperCase()}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.1em", color: "#888", marginBottom: 2 }}>SALES</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 24, fontWeight: 700, color: "#6b2f0a" }}>{fmtShort(weekStats.sales)}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, letterSpacing: "0.1em", color: "#888", marginBottom: 2 }}>SALES</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 26, fontWeight: 700, color: "#334155" }}>{fmtShort(weekStats.sales)}</div>
           </div>
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.1em", color: "#888", marginBottom: 2 }}>COLLECTIONS</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 24, fontWeight: 700, color: "#166534" }}>{fmtShort(weekStats.collections)}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, letterSpacing: "0.1em", color: "#888", marginBottom: 2 }}>COLLECTIONS</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 26, fontWeight: 700, color: "#166534" }}>{fmtShort(weekStats.collections)}</div>
           </div>
         </div>
       </div>
       <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 12 }}>
-        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.14em", color: "#888", marginBottom: 8 }}>
+        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, letterSpacing: "0.14em", color: "#888", marginBottom: 8 }}>
           THIS MONTH · {monthStats.label.toUpperCase()}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.1em", color: "#888", marginBottom: 2 }}>SALES</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 18, fontWeight: 600, color: "#6b2f0a" }}>{fmtShort(monthStats.sales)}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, letterSpacing: "0.1em", color: "#888", marginBottom: 2 }}>SALES</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 20, fontWeight: 600, color: "#334155" }}>{fmtShort(monthStats.sales)}</div>
           </div>
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.1em", color: "#888", marginBottom: 2 }}>COLLECTIONS</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 18, fontWeight: 600, color: "#166534" }}>{fmtShort(monthStats.collections)}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, letterSpacing: "0.1em", color: "#888", marginBottom: 2 }}>COLLECTIONS</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 20, fontWeight: 600, color: "#166534" }}>{fmtShort(monthStats.collections)}</div>
           </div>
         </div>
       </div>
@@ -184,7 +184,7 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
   }, [salesmen]);
 
   if (loading) return (
-    <div style={{ textAlign: "center", padding: 20, fontFamily: "'IBM Plex Mono'", fontSize: 11, color: "#888" }}>Loading stats...</div>
+    <div style={{ textAlign: "center", padding: 20, fontFamily: "'IBM Plex Mono'", fontSize: 12, color: "#888" }}>Loading stats...</div>
   );
 
   const table = (rows, label) => {
@@ -193,12 +193,12 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
     const totalColl  = rows.reduce((s, r) => s + (r.collections || 0), 0);
     return (
       <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", marginBottom: 16 }}>
-        <div style={{ padding: "10px 16px", background: "#fdf0e8", borderBottom: "1px solid #e2e8f0" }}>
-          <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, letterSpacing: "0.12em", color: "#6b2f0a", fontWeight: 600 }}>{label}</span>
+        <div style={{ padding: "10px 16px", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0" }}>
+          <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, letterSpacing: "0.12em", color: "#334155", fontWeight: 600 }}>{label}</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "8px 16px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
           {["SALESMAN", "SALES", "COLLECTIONS"].map(h => (
-            <div key={h} style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, letterSpacing: "0.1em", color: "#888", textAlign: h === "SALESMAN" ? "left" : "right" }}>{h}</div>
+            <div key={h} style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, letterSpacing: "0.1em", color: "#888", textAlign: h === "SALESMAN" ? "left" : "right" }}>{h}</div>
           ))}
         </div>
         {rows.map((r, i) => (
@@ -207,17 +207,17 @@ export function AdminWeeklyLeaderboard({ salesmen }) {
               {i === 0 && <span style={{ fontSize: 14 }}>🥇</span>}
               {i === 1 && <span style={{ fontSize: 14 }}>🥈</span>}
               {i === 2 && <span style={{ fontSize: 14 }}>🥉</span>}
-              {i > 2 && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 10, color: "#aaa", width: 22, textAlign: "center" }}>{i + 1}</span>}
-              <span style={{ fontSize: 14, fontWeight: i === 0 ? 600 : 400, color: "#6b2f0a" }}>{displayName(r.name)}</span>
+              {i > 2 && <span style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, color: "#aaa", width: 22, textAlign: "center" }}>{i + 1}</span>}
+              <span style={{ fontSize: 15, fontWeight: i === 0 ? 600 : 400, color: "#334155" }}>{displayName(r.name)}</span>
             </div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: i === 0 ? 600 : 400, color: "#6b2f0a", textAlign: "right" }}>{fmtShort(r.sales)}</div>
-            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: i === 0 ? 600 : 400, color: "#166534", textAlign: "right" }}>{fmtShort(r.collections)}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 14, fontWeight: i === 0 ? 600 : 400, color: "#334155", textAlign: "right" }}>{fmtShort(r.sales)}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 14, fontWeight: i === 0 ? 600 : 400, color: "#166534", textAlign: "right" }}>{fmtShort(r.collections)}</div>
           </div>
         ))}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 16px", background: "#fdf0e8", borderTop: "2px solid #e2e8f0", alignItems: "center" }}>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, fontWeight: 600, color: "#6b2f0a", letterSpacing: "0.08em" }}>TOTAL</div>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: "#6b2f0a", textAlign: "right" }}>{fmtShort(totalSales)}</div>
-          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 700, color: "#166534", textAlign: "right" }}>{fmtShort(totalColl)}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 16px", background: "#f1f5f9", borderTop: "2px solid #e2e8f0", alignItems: "center" }}>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 12, fontWeight: 600, color: "#334155", letterSpacing: "0.08em" }}>TOTAL</div>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 14, fontWeight: 700, color: "#334155", textAlign: "right" }}>{fmtShort(totalSales)}</div>
+          <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 14, fontWeight: 700, color: "#166534", textAlign: "right" }}>{fmtShort(totalColl)}</div>
         </div>
       </div>
     );
