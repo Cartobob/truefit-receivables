@@ -5,6 +5,7 @@ import { getBillPDFUrl } from "../lib/pdfStorage";
 import { generateAgeingReport } from "../lib/ageingReport";
 import { generateAgeingExcel } from "../lib/ageingExcel";
 import { SalesmanWeeklyCard } from "../lib/WeeklyStats";
+import { generateDealerStatement } from "../lib/dealerStatement";
 
 export default function SalesmanView({ salesman }) {
   const [dealers, setDealers] = useState([]);
@@ -12,6 +13,8 @@ export default function SalesmanView({ salesman }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [viewingPDF, setViewingPDF] = useState(null);
+  const [showStatement, setShowStatement] = useState(null);
+  const [stmtRange, setStmtRange] = useState({ start: "", end: "" });
 
   useEffect(() => { fetchDealers(); }, [salesman.id]);
 
@@ -61,6 +64,9 @@ export default function SalesmanView({ salesman }) {
           <iframe src={viewingPDF.url} style={{ flex: 1, border: "none" }} title="Bill PDF" />
         </div>
       )}
+
+      {/* Salesman name */}
+      <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#6b2f0a", letterSpacing: "0.08em", marginBottom: 16, textTransform: "uppercase" }}>{salesman.name}</div>
 
       {/* Weekly / Monthly stats card */}
       <SalesmanWeeklyCard salesmanId={salesman.id} />
@@ -169,6 +175,10 @@ export default function SalesmanView({ salesman }) {
                     style={{ padding: "6px 12px", fontSize: 12, borderRadius: 6, border: "1px solid #e2e8f0", background: "#f8fafc", color: "#6b2f0a" }}>
                     {dealer.bills.length} bill{dealer.bills.length !== 1 ? "s" : ""} {isOpen ? "▲" : "▼"}
                   </button>
+                  <button onClick={() => { setShowStatement(showStatement === dealer.id ? null : dealer.id); const today = new Date().toISOString().split("T")[0]; const start = new Date(new Date().getFullYear(), 3, 1).toISOString().split("T")[0]; setStmtRange({ start, end: today }); }}
+                    style={{ padding: "6px 10px", fontSize: 12, borderRadius: 6, border: "1px solid #e2e8f0", background: "#f0fdf4", color: "#166534" }}>
+                    📄 Stmt
+                  </button>
                 </div>
 
                 {isOpen && (
@@ -194,6 +204,24 @@ export default function SalesmanView({ salesman }) {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+
+                {showStatement === dealer.id && (
+                  <div style={{ padding: "12px 16px", background: "#f0fdf4", borderTop: "1px solid #86efac" }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 11, letterSpacing: "0.1em", color: "#166534", marginBottom: 8 }}>DEALER STATEMENT</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, color: "#888", marginBottom: 3 }}>FROM</div>
+                        <input type="date" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, background: "#ffffff", color: "#166534" }} value={stmtRange.start} onChange={e => setStmtRange(r => ({ ...r, start: e.target.value }))} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 9, color: "#888", marginBottom: 3 }}>TO</div>
+                        <input type="date" style={{ width: "100%", padding: "8px 10px", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: 13, background: "#ffffff", color: "#166534" }} value={stmtRange.end} onChange={e => setStmtRange(r => ({ ...r, end: e.target.value }))} />
+                      </div>
+                      <button onClick={() => generateDealerStatement(dealer, stmtRange.start, stmtRange.end)} style={{ padding: "8px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 11, borderRadius: 6, border: "none", background: "#166534", color: "#ffffff", cursor: "pointer" }}>GENERATE</button>
+                      <button onClick={() => setShowStatement(null)} style={{ padding: "8px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 11, borderRadius: 6, border: "1px solid #e2e8f0", background: "#ffffff", color: "#888", cursor: "pointer" }}>✕</button>
+                    </div>
                   </div>
                 )}
               </div>
