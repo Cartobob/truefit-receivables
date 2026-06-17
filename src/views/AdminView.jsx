@@ -6,6 +6,7 @@ import { uploadBillPDF, getBillPDFUrl, cleanupSettledBillPDFs } from "../lib/pdf
 import { generateAgeingReport } from "../lib/ageingReport";
 import { generateDealerStatement } from "../lib/dealerStatement";
 import { AdminWeeklyLeaderboard } from "../lib/WeeklyStats";
+import { logActivity } from "../lib/activityLog";
 
 export default function AdminView({ salesmen, onRefresh }) {
   const [data, setData] = useState([]);
@@ -102,6 +103,8 @@ export default function AdminView({ salesmen, onRefresh }) {
         } catch (err) { console.warn("PDF upload failed:", err); }
       }
       setNewBill({ bill_no: "", amount: "", bill_date: "" }); setPendingPDF(null); setShowAddBill(null);
+      const dlr = data.flatMap(s => s.dealers).find(d => d.id === dealerId);
+      await logActivity("bill_add", `Added bill ${newBill.bill_no} for ${dlr?.name || "dealer"}, Rs.${newBill.amount}`, dlr?.name, newBill.amount);
     } finally { setSaving(false); fetchAll(); }
   };
 
@@ -130,6 +133,7 @@ export default function AdminView({ salesmen, onRefresh }) {
         remaining -= apply;
       }
     }
+    await logActivity("payment", `Recorded payment Rs.${amount} for ${dealer.name} (auto/FIFO)`, dealer.name, amount);
     setPayAmount(""); setShowPayment(null); setSaving(false); fetchAll();
   };
 
@@ -152,6 +156,7 @@ export default function AdminView({ salesmen, onRefresh }) {
         if (nb === 0) await markSettledIfDone({ ...bill, balance: nb });
       }
     }
+    await logActivity("payment", `Recorded payment Rs.${totalAmount} for ${dealer.name} (manual allocation)`, dealer.name, totalAmount);
     setBillAllocations({}); setShowPayment(null); setSaving(false); fetchAll();
   };
 
@@ -159,6 +164,8 @@ export default function AdminView({ salesmen, onRefresh }) {
     if (!newCheque.amount || !newCheque.cheque_date) return;
     setSaving(true);
     await supabase.from("cheques").insert({ dealer_id: dealerId, amount: parseFloat(newCheque.amount), cheque_date: newCheque.cheque_date, bank_name: newCheque.bank_name || null, status: "pending" });
+    const dlrC = data.flatMap(s => s.dealers).find(d => d.id === dealerId);
+    await logActivity("cheque_add", `Logged cheque Rs.${newCheque.amount} for ${dlrC?.name || "dealer"}${newCheque.bank_name ? " (" + newCheque.bank_name + ")" : ""}`, dlrC?.name, newCheque.amount);
     setNewCheque({ amount: "", cheque_date: "", bank_name: "" }); setShowAddCheque(null); setSaving(false); fetchAll();
   };
 
@@ -183,12 +190,14 @@ export default function AdminView({ salesmen, onRefresh }) {
         remaining -= apply;
       }
     }
+    await logActivity("cheque_clear", `Cleared cheque Rs.${cheque.amount} for ${dealer.name}`, dealer.name, cheque.amount);
     setSaving(false); fetchAll();
   };
 
   const bounceCheque = async (chequeId) => {
     setSaving(true);
     await supabase.from("cheques").update({ status: "bounced", bounce_note: bounceNote || null }).eq("id", chequeId);
+    await logActivity("cheque_bounce", `Marked cheque BOUNCED${bounceNote ? " — " + bounceNote : ""}`, null, null);
     setShowBounceNote(null); setBounceNote(""); setSaving(false); fetchAll();
   };
 
@@ -196,6 +205,9 @@ export default function AdminView({ salesmen, onRefresh }) {
     if (!newSalesmanId) return;
     setSaving(true);
     await supabase.from("dealers").update({ salesman_id: newSalesmanId }).eq("id", dealerId);
+    const dlrT = data.flatMap(s => s.dealers).find(d => d.id === dealerId);
+    const newSm = salesmen.find(s => s.id === newSalesmanId);
+    await logActivity("transfer", `Transferred ${dlrT?.name || "dealer"} to ${newSm?.name || "salesman"}`, dlrT?.name, null);
     setShowTransfer(null); setSaving(false); fetchAll();
   };
 
@@ -205,6 +217,7 @@ export default function AdminView({ salesmen, onRefresh }) {
       bill_no: editBillData.bill_no, amount: parseFloat(editBillData.amount),
       balance: parseFloat(editBillData.balance), bill_date: editBillData.bill_date,
     }).eq("id", billId);
+    await logActivity("bill_edit", `Edited bill ${editBillData.bill_no} — amount Rs.${editBillData.amount}, balance Rs.${editBillData.balance}`, null, editBillData.amount);
     setEditingBill(null); setEditBillData({}); setSaving(false); fetchAll();
   };
 
@@ -212,6 +225,7 @@ export default function AdminView({ salesmen, onRefresh }) {
     if (!window.confirm("Delete this bill permanently?")) return;
     setSaving(true);
     await supabase.from("bills").delete().eq("id", billId);
+    await logActivity("bill_delete", `Deleted a bill (id ${billId})`, null, null);
     setSaving(false); fetchAll();
   };
 
@@ -225,6 +239,8 @@ export default function AdminView({ salesmen, onRefresh }) {
       note: newCreditNote.note || null,
       credit_date: newCreditNote.credit_date
     });
+    const dlrCN = data.flatMap(s => s.dealers).find(d => d.id === dealerId);
+    await logActivity("credit_note", `Credit note ${newCreditNote.cn_no} Rs.${newCreditNote.amount} for ${dlrCN?.name || "dealer"}${newCreditNote.note ? " — " + newCreditNote.note : ""}`, dlrCN?.name, newCreditNote.amount);
     setNewCreditNote({ cn_no: "", amount: "", note: "", credit_date: "" });
     setShowCreditNote(null);
     setSaving(false);
