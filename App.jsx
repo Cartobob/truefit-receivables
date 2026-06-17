@@ -4,6 +4,7 @@ import Login from "./views/Login";
 import SalesmanView from "./views/SalesmanView";
 import AdminView from "./views/AdminView";
 import ProfitabilityView from "./views/ProfitabilityView";
+import ActivityLogView from "./views/ActivityLogView";
 
 const ADMIN_PIN = "0000";
 
@@ -43,6 +44,7 @@ export default function App() {
     ? [
         { id: "dashboard", label: "DEALERS" },
         { id: "profitability", label: "P&L" },
+        { id: "log", label: "LOG" },
         { id: "admin", label: "ADMIN" },
       ]
     : [{ id: "dashboard", label: "MY DEALERS" }];
@@ -89,6 +91,7 @@ export default function App() {
           : <SalesmanView salesman={auth.salesman} />
         )}
         {view === "profitability" && isAdmin && <ProfitabilityView salesmen={salesmen} />}
+        {view === "log" && isAdmin && <ActivityLogView />}
         {view === "admin" && isAdmin && <AdminView salesmen={salesmen} onRefresh={fetchSalesmen} />}
       </div>
     </div>
