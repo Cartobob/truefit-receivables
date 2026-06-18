@@ -10,7 +10,7 @@ export async function extractInvoiceFromPDF(file) {
       "anthropic-dangerous-direct-browser-access": "true"
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 300,
       system: `You are extracting fields from a Tally-generated tax invoice PDF for Truefit Skim Coat Products / Padmavathi Agencies.
 Extract exactly these fields and return ONLY valid JSON, no other text:
