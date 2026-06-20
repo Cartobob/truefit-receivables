@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const APP_VERSION = "v9";
+const APP_VERSION = "v10";
 
 export default function Login({ salesmen, adminPin, onLogin }) {
   const [tab, setTab] = useState("salesman"); // "salesman" | "admin"
