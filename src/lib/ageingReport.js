@@ -13,7 +13,7 @@ function renderDealerBlock(dealer) {
         <td style="padding:6px 10px;font-family:monospace;font-size:12px;color:#444;">${bill.bill_no}</td>
         <td style="padding:6px 10px;font-size:12px;color:#666;">${fmtDate(bill.bill_date)}</td>
         <td style="padding:6px 10px;font-size:12px;text-align:right;color:#666;">${fmt(bill.amount)}</td>
-        <td style="padding:6px 10px;font-size:12px;font-weight:600;text-align:right;">${fmt(bill.balance)}</td>
+        <td style="padding:6px 10px;font-size:12px;font-weight:700;text-align:right;">${fmt(bill.balance)}</td>
         <td style="padding:6px 10px;text-align:center;">
           <span style="font-size:11px;padding:2px 8px;border-radius:3px;background:${bkt.bg};color:${bkt.color};border:1px solid ${bkt.border};">${days}d</span>
         </td>
@@ -129,7 +129,7 @@ export function generateAgeingReport(salesman, dealers, allBills = false) {
     ].map(s => `
       <div style="border:1px solid #ddd5c8;border-radius:6px;padding:12px 14px;background:#faf7f2;">
         <div style="font-family:'IBM Plex Mono';font-size:8px;letter-spacing:0.12em;color:#8a7d6e;margin-bottom:4px;">${s.label}</div>
-        <div style="font-family:'IBM Plex Mono';font-size:14px;font-weight:500;color:${s.color};">${s.val}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:14px;font-weight:700;color:${s.color};">${s.val}</div>
       </div>`).join("")}
   </div>
 

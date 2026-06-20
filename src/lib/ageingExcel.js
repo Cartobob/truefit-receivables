@@ -86,12 +86,24 @@ function styleSheet(ws, rows, XLSX) {
   const thin  = { style: "thin",   color: { rgb: "CCCCCC" } };
   const cellBorder = { left: thick, right: thick, top: thin, bottom: thin };
 
+  // Identify which rows should be bold:
+  // row 0 (entity headers), row 1 (column headers), grand total row, and per-dealer total rows.
+  const boldRows = new Set();
+  rows.forEach((row, idx) => {
+    if (idx === 0 || idx === 1) { boldRows.add(idx); return; }
+    if (row[0] === "Grand Total" || row[5] === "Grand Total") { boldRows.add(idx); return; }
+    // Per-dealer total rows: cols 2/3 or 7/8 have a number but Date (col 0/5) and Details (col 1/6) are blank
+    const paTotalRow = (row[0] === "" && row[1] === "" && (row[2] !== "" || row[3] !== ""));
+    const tfTotalRow = (row[5] === "" && row[6] === "" && (row[7] !== "" || row[8] !== ""));
+    if (paTotalRow || tfTotalRow) boldRows.add(idx);
+  });
+
   const range = XLSX.utils.decode_range(ws["!ref"]);
   for (let R = range.s.r; R <= range.e.r; R++) {
     for (let C = range.s.c; C <= range.e.c; C++) {
       const addr = XLSX.utils.encode_cell({ r: R, c: C });
       if (!ws[addr]) ws[addr] = { v: "", t: "s" };
-      ws[addr].s = { border: cellBorder };
+      ws[addr].s = { border: cellBorder, font: { bold: boldRows.has(R) } };
     }
   }
 }
