@@ -256,6 +256,31 @@ export default function AdminView({ salesmen, onRefresh }) {
     } catch { alert("Could not load PDF."); }
   };
 
+  const downloadDealersCSV = () => {
+    const rows = [["Dealer", "Area", "Salesman", "Outstanding", "Pending Cheques"]];
+    data.forEach(sm => {
+      sm.dealers.forEach(d => {
+        const out = totalBalance(d.bills);
+        const chq = totalPendingCheques(d.cheques);
+        rows.push([
+          (d.name || "").replace(/"/g, '""'),
+          (d.area || "").replace(/"/g, '""'),
+          (sm.name || "").replace(/"/g, '""'),
+          out,
+          chq
+        ]);
+      });
+    });
+    const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Dealers_List_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const card = { background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" };
   const inp = { background: "#f8fafc", border: "1px solid var(--border)", borderRadius: 6, padding: "9px 12px", fontSize: 16, color: "#334155", width: "100%" };
   const btnP = { padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 14, borderRadius: 6, border: "none", background: "#334155", color: "#ffffff", letterSpacing: "0.06em", cursor: "pointer" };
@@ -290,6 +315,7 @@ export default function AdminView({ salesmen, onRefresh }) {
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => generateAgeingReport("All Salesmen", allDealers)} style={{ padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)", background: "#ffffff", color: "#334155", letterSpacing: "0.08em", cursor: "pointer" }}>⬇ Full Report (PDF)</button>
           <button onClick={() => generateAgeingExcelAllSalesmen(data.map(sm => ({ salesmanName: sm.name, dealers: sm.dealers })))} style={{ padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)", background: "#ffffff", color: "#334155", letterSpacing: "0.08em", cursor: "pointer" }}>⬇ Full Report (Excel)</button>
+          <button onClick={downloadDealersCSV} style={{ padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)", background: "#ffffff", color: "#334155", letterSpacing: "0.08em", cursor: "pointer" }}>⬇ Dealers CSV</button>
           <button onClick={fetchAll} style={btnG}>&#8635; Refresh</button>
           <button onClick={() => setShowAddSalesman(true)} style={btnP}>+ Salesman</button>
         </div>
