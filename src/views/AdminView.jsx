@@ -212,6 +212,19 @@ export default function AdminView({ salesmen, onRefresh }) {
     setShowTransfer(null); setSaving(false); fetchAll();
   };
 
+  const deleteDealer = async (dealer) => {
+    const activeBills = (dealer.bills || []).filter(b => Number(b.balance) > 0);
+    if (activeBills.length > 0) {
+      alert("This dealer has outstanding bills. Settle or delete the bills first.");
+      return;
+    }
+    if (!window.confirm(`Delete dealer "${dealer.name}"? This cannot be undone.`)) return;
+    setSaving(true);
+    await supabase.from("dealers").delete().eq("id", dealer.id);
+    await logActivity("dealer_delete", `Deleted dealer ${dealer.name}`, dealer.name, null);
+    setSaving(false); fetchAll();
+  };
+
   const saveBill = async (billId) => {
     setSaving(true);
     await supabase.from("bills").update({
@@ -467,6 +480,9 @@ export default function AdminView({ salesmen, onRefresh }) {
                                 <button onClick={() => { setShowStatement(dealer.id); setShowAddBill(null); setShowPayment(null); setShowAddCheque(null); setShowTransfer(null); setShowCreditNote(null); const today = new Date().toISOString().split("T")[0]; const start = new Date(new Date().getFullYear(), 3, 1).toISOString().split("T")[0]; setStmtRange({ start, end: today }); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>📄 Stmt</button>
                                 <button onClick={() => { setShowTransfer(showTransfer === dealer.id ? null : dealer.id); setShowAddBill(null); setShowAddCheque(null); setShowPayment(null); setShowCreditNote(null); setShowStatement(null); }} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>⇄ Transfer</button>
                                 <button onClick={() => openAddBill(dealer.id)} style={{ ...btnG, padding: "4px 8px", fontSize: 10 }}>+ Bill</button>
+                                {dealer.bills.length === 0 && (
+                                  <button onClick={() => deleteDealer(dealer)} style={{ ...btnRed, padding: "4px 8px", fontSize: 10 }}>🗑 Delete</button>
+                                )}
                                 <button onClick={() => toggleDealer(dealer.id)} style={{ ...btnG, padding: "4px 8px", fontSize: 11 }}>
                                   {dealer.bills.filter(b => Number(b.balance) > 0).length} bills {isDealerOpen ? "▲" : "▼"}
                                 </button>
