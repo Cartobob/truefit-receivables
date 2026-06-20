@@ -1,9 +1,63 @@
 import { fmt, fmtDate, ageDays, ageBucket, totalBalance, pendingCheques, totalPendingCheques } from "./helpers";
 
+function renderDealerBlock(dealer) {
+  const bal = totalBalance(dealer.bills);
+  const pending = pendingCheques(dealer.cheques || []);
+  const activeBills = (dealer.bills || []).filter(b => Number(b.balance) > 0).sort((a, b) => new Date(a.bill_date) - new Date(b.bill_date));
+
+  const billRows = activeBills.map(bill => {
+    const days = ageDays(bill.bill_date);
+    const bkt = ageBucket(days);
+    return `
+      <tr>
+        <td style="padding:6px 10px;font-family:monospace;font-size:12px;color:#444;">${bill.bill_no}</td>
+        <td style="padding:6px 10px;font-size:12px;color:#666;">${fmtDate(bill.bill_date)}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:right;color:#666;">${fmt(bill.amount)}</td>
+        <td style="padding:6px 10px;font-size:12px;font-weight:600;text-align:right;">${fmt(bill.balance)}</td>
+        <td style="padding:6px 10px;text-align:center;">
+          <span style="font-size:11px;padding:2px 8px;border-radius:3px;background:${bkt.bg};color:${bkt.color};border:1px solid ${bkt.border};">${days}d</span>
+        </td>
+      </tr>`;
+  }).join("");
+
+  const chequeRows = pending.map(c => `
+    <tr style="background:#fffbeb;">
+      <td colspan="3" style="padding:5px 10px;font-size:11px;font-family:monospace;color:#92640a;">
+        🟡 CHQ · ${fmtDate(c.cheque_date)}${c.bank_name ? " · " + c.bank_name : ""}
+      </td>
+      <td style="padding:5px 10px;font-size:12px;font-weight:600;text-align:right;color:#92640a;">${fmt(c.amount)}</td>
+      <td style="padding:5px 10px;font-size:11px;text-align:center;color:#92640a;">PENDING</td>
+    </tr>`).join("");
+
+  return `
+    <div style="margin-bottom:20px;break-inside:avoid;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid #1c1612;padding-bottom:4px;margin-bottom:0;">
+        <span style="font-size:14px;font-weight:600;color:#1c1612;">${dealer.name}</span>
+        <span style="font-family:monospace;font-size:14px;font-weight:700;color:#8b1a1a;">${fmt(bal)}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-top:0;">
+        <thead>
+          <tr style="background:#f0ede8;">
+            <th style="padding:5px 10px;font-size:10px;text-align:left;letter-spacing:0.08em;color:#888;font-weight:500;">BILL NO</th>
+            <th style="padding:5px 10px;font-size:10px;text-align:left;letter-spacing:0.08em;color:#888;font-weight:500;">DATE</th>
+            <th style="padding:5px 10px;font-size:10px;text-align:right;letter-spacing:0.08em;color:#888;font-weight:500;">AMOUNT</th>
+            <th style="padding:5px 10px;font-size:10px;text-align:right;letter-spacing:0.08em;color:#888;font-weight:500;">BALANCE</th>
+            <th style="padding:5px 10px;font-size:10px;text-align:center;letter-spacing:0.08em;color:#888;font-weight:500;">AGE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${billRows}
+          ${chequeRows}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// dealers: if grouping by salesman is needed, each dealer should carry a `_salesmanName` property.
+// If every dealer has the same _salesmanName (or none), it renders as a single flat section (per-salesman report behaviour unchanged).
 export function generateAgeingReport(salesman, dealers, allBills = false) {
   const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
 
-  // Compute summary
   const activeDealers = dealers.filter(d => totalBalance(d.bills) > 0 || pendingCheques(d.cheques || []).length > 0);
   const grandTotal = activeDealers.reduce((s, d) => s + totalBalance(d.bills), 0);
   const grandCheque = activeDealers.reduce((s, d) => s + totalPendingCheques(d.cheques), 0);
@@ -11,58 +65,27 @@ export function generateAgeingReport(salesman, dealers, allBills = false) {
   const b60  = activeDealers.reduce((s, d) => s + (d.bills||[]).filter(b => Number(b.balance) > 0 && ageDays(b.bill_date) > 30 && ageDays(b.bill_date) <= 60).reduce((x, b) => x + Number(b.balance), 0), 0);
   const b60p = activeDealers.reduce((s, d) => s + (d.bills||[]).filter(b => Number(b.balance) > 0 && ageDays(b.bill_date) > 60).reduce((x, b) => x + Number(b.balance), 0), 0);
 
-  const dealerRows = activeDealers.map(dealer => {
-    const bal = totalBalance(dealer.bills);
-    const pending = pendingCheques(dealer.cheques || []);
-    const activeBills = (dealer.bills || []).filter(b => Number(b.balance) > 0).sort((a, b) => new Date(a.bill_date) - new Date(b.bill_date));
+  // Determine if we should group by salesman: more than one distinct _salesmanName present
+  const distinctSalesmen = [...new Set(activeDealers.map(d => d._salesmanName).filter(Boolean))];
+  const grouped = distinctSalesmen.length > 1;
 
-    const billRows = activeBills.map(bill => {
-      const days = ageDays(bill.bill_date);
-      const bkt = ageBucket(days);
+  let dealerSection;
+  if (grouped) {
+    dealerSection = distinctSalesmen.map(smName => {
+      const smDealers = activeDealers.filter(d => d._salesmanName === smName);
+      const smTotal = smDealers.reduce((s, d) => s + totalBalance(d.bills), 0);
       return `
-        <tr>
-          <td style="padding:6px 10px;font-family:monospace;font-size:12px;color:#444;">${bill.bill_no}</td>
-          <td style="padding:6px 10px;font-size:12px;color:#666;">${fmtDate(bill.bill_date)}</td>
-          <td style="padding:6px 10px;font-size:12px;text-align:right;color:#666;">${fmt(bill.amount)}</td>
-          <td style="padding:6px 10px;font-size:12px;font-weight:600;text-align:right;">${fmt(bill.balance)}</td>
-          <td style="padding:6px 10px;text-align:center;">
-            <span style="font-size:11px;padding:2px 8px;border-radius:3px;background:${bkt.bg};color:${bkt.color};border:1px solid ${bkt.border};">${days}d</span>
-          </td>
-        </tr>`;
+        <div style="margin-bottom:28px;break-inside:avoid;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;background:#1c1612;color:#fff;padding:8px 14px;border-radius:6px;margin-bottom:14px;">
+            <span style="font-family:'IBM Plex Mono';font-size:13px;letter-spacing:0.1em;font-weight:600;">${smName.toUpperCase()}</span>
+            <span style="font-family:monospace;font-size:14px;font-weight:700;">${fmt(smTotal)} · ${smDealers.length} dealers</span>
+          </div>
+          ${smDealers.map(renderDealerBlock).join("")}
+        </div>`;
     }).join("");
-
-    const chequeRows = pending.map(c => `
-      <tr style="background:#fffbeb;">
-        <td colspan="3" style="padding:5px 10px;font-size:11px;font-family:monospace;color:#92640a;">
-          🟡 CHQ · ${fmtDate(c.cheque_date)}${c.bank_name ? " · " + c.bank_name : ""}
-        </td>
-        <td style="padding:5px 10px;font-size:12px;font-weight:600;text-align:right;color:#92640a;">${fmt(c.amount)}</td>
-        <td style="padding:5px 10px;font-size:11px;text-align:center;color:#92640a;">PENDING</td>
-      </tr>`).join("");
-
-    return `
-      <div style="margin-bottom:20px;break-inside:avoid;">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid #1c1612;padding-bottom:4px;margin-bottom:0;">
-          <span style="font-size:14px;font-weight:600;color:#1c1612;">${dealer.name}</span>
-          <span style="font-family:monospace;font-size:14px;font-weight:700;color:#8b1a1a;">${fmt(bal)}</span>
-        </div>
-        <table style="width:100%;border-collapse:collapse;margin-top:0;">
-          <thead>
-            <tr style="background:#f0ede8;">
-              <th style="padding:5px 10px;font-size:10px;text-align:left;letter-spacing:0.08em;color:#888;font-weight:500;">BILL NO</th>
-              <th style="padding:5px 10px;font-size:10px;text-align:left;letter-spacing:0.08em;color:#888;font-weight:500;">DATE</th>
-              <th style="padding:5px 10px;font-size:10px;text-align:right;letter-spacing:0.08em;color:#888;font-weight:500;">AMOUNT</th>
-              <th style="padding:5px 10px;font-size:10px;text-align:right;letter-spacing:0.08em;color:#888;font-weight:500;">BALANCE</th>
-              <th style="padding:5px 10px;font-size:10px;text-align:center;letter-spacing:0.08em;color:#888;font-weight:500;">AGE</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${billRows}
-            ${chequeRows}
-          </tbody>
-        </table>
-      </div>`;
-  }).join("");
+  } else {
+    dealerSection = activeDealers.map(renderDealerBlock).join("");
+  }
 
   const html = `<!DOCTYPE html>
 <html>
@@ -112,10 +135,10 @@ export function generateAgeingReport(salesman, dealers, allBills = false) {
 
   <!-- Dealer detail -->
   <div style="font-family:'IBM Plex Mono';font-size:9px;letter-spacing:0.14em;color:#8a7d6e;margin-bottom:14px;border-bottom:1px solid #ddd5c8;padding-bottom:6px;">
-    DEALER-WISE DETAIL · ${activeDealers.length} DEALERS
+    DEALER-WISE DETAIL · ${activeDealers.length} DEALERS${grouped ? ` · ${distinctSalesmen.length} SALESMEN` : ""}
   </div>
 
-  ${dealerRows}
+  ${dealerSection}
 
   <!-- Footer -->
   <div style="margin-top:32px;border-top:1px solid #ddd5c8;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">

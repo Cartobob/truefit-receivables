@@ -1,16 +1,17 @@
-export async function generateAgeingExcel(salesmanName, dealers) {
-  try {
-  const _xlsxKey = "__xlsxStyleLoaded";
-  if (!window[_xlsxKey]) {
-    await loadScript("https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
-    window[_xlsxKey] = true;
-  }
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
 
-  // xlsx-js-style exposes as window.XLSX
-  const XLSX = window.XLSX;
-  const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const monthYear = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+const fmtDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" });
 
+function buildSheetRows(dealers, monthYear) {
   const paDealers = {};
   const tfDealers = {};
 
@@ -29,8 +30,6 @@ export async function generateAgeingExcel(salesmanName, dealers) {
 
   rows.push([paHeader, "", "", "", "", tfHeader, "", "", "", ""]);
   rows.push(["Date", "Details", "Opening", "Pending", "Due", "Date", "Details", "Opening", "Pending", "Due"]);
-
-  const fmtDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" });
 
   for (const dealer of allDealerNames) {
     const paB = paDealers[dealer] || [];
@@ -70,10 +69,10 @@ export async function generateAgeingExcel(salesmanName, dealers) {
   const grandTfPend = Object.values(tfDealers).flat().reduce((s, b) => s + Number(b.balance), 0);
   rows.push(["Grand Total", "", grandPaAmt, grandPaPend, "", "Grand Total", "", grandTfAmt, grandTfPend, ""]);
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  return rows;
+}
 
-  // Auto-fit column widths
+function styleSheet(ws, rows, XLSX) {
   const colWidths = Array(10).fill(0);
   for (const row of rows) {
     row.forEach((cell, i) => {
@@ -83,7 +82,6 @@ export async function generateAgeingExcel(salesmanName, dealers) {
   }
   ws["!cols"] = colWidths.map(w => ({ wch: Math.min(Math.max(w + 1, 8), 50) }));
 
-  // Apply borders — thick for columns, thin for rows
   const thick = { style: "medium", color: { rgb: "888888" } };
   const thin  = { style: "thin",   color: { rgb: "CCCCCC" } };
   const cellBorder = { left: thick, right: thick, top: thin, bottom: thin };
@@ -96,24 +94,73 @@ export async function generateAgeingExcel(salesmanName, dealers) {
       ws[addr].s = { border: cellBorder };
     }
   }
+}
 
-  XLSX.utils.book_append_sheet(wb, ws, salesmanName.substring(0, 31));
+// Single-salesman export — unchanged behaviour
+export async function generateAgeingExcel(salesmanName, dealers) {
+  try {
+    const _xlsxKey = "__xlsxStyleLoaded";
+    if (!window[_xlsxKey]) {
+      await loadScript("https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
+      window[_xlsxKey] = true;
+    }
+    const XLSX = window.XLSX;
+    const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const monthYear = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 
-  const filename = `${salesmanName.replace(/\s+/g, "_")}_Ageing_${today.replace(/\//g, "-")}.xlsx`;
-  XLSX.writeFile(wb, filename);
+    const rows = buildSheetRows(dealers, monthYear);
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    styleSheet(ws, rows, XLSX);
+    XLSX.utils.book_append_sheet(wb, ws, salesmanName.substring(0, 31));
+
+    const filename = `${salesmanName.replace(/\s+/g, "_")}_Ageing_${today.replace(/\//g, "-")}.xlsx`;
+    XLSX.writeFile(wb, filename);
   } catch(e) {
     alert("Excel export failed: " + e.message);
     console.error(e);
   }
 }
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
+// Full report — one sheet per salesman in a single workbook.
+// dealersBySalesman: array of { salesmanName, dealers } — used by the "Full Report" button.
+export async function generateAgeingExcelAllSalesmen(dealersBySalesman) {
+  try {
+    const _xlsxKey = "__xlsxStyleLoaded";
+    if (!window[_xlsxKey]) {
+      await loadScript("https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.bundle.js");
+      window[_xlsxKey] = true;
+    }
+    const XLSX = window.XLSX;
+    const today = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const monthYear = new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+
+    const wb = XLSX.utils.book_new();
+    const usedNames = new Set();
+
+    for (const { salesmanName, dealers } of dealersBySalesman) {
+      const hasData = dealers.some(d => (d.bills || []).some(b => Number(b.balance) > 0));
+      if (!hasData) continue;
+
+      const rows = buildSheetRows(dealers, monthYear);
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      styleSheet(ws, rows, XLSX);
+
+      let sheetName = salesmanName.substring(0, 31) || "Sheet";
+      let suffix = 1;
+      while (usedNames.has(sheetName)) {
+        sheetName = (salesmanName.substring(0, 28) + "_" + suffix).substring(0, 31);
+        suffix++;
+      }
+      usedNames.add(sheetName);
+
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    }
+
+    const filename = `Full_Ageing_Report_${today.replace(/\//g, "-")}.xlsx`;
+    XLSX.writeFile(wb, filename);
+  } catch(e) {
+    alert("Excel export failed: " + e.message);
+    console.error(e);
+  }
 }
