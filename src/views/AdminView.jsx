@@ -4,6 +4,7 @@ import { fmt, fmtDate, totalBalance, worstBucket, ageDays, ageBucket, stripColor
 import { extractInvoiceFromPDF } from "../lib/extractInvoice";
 import { uploadBillPDF, getBillPDFUrl, cleanupSettledBillPDFs } from "../lib/pdfStorage";
 import { generateAgeingReport } from "../lib/ageingReport";
+import { generateAgeingExcelAllSalesmen } from "../lib/ageingExcel";
 import { generateDealerStatement } from "../lib/dealerStatement";
 import { AdminWeeklyLeaderboard } from "../lib/WeeklyStats";
 import { logActivity } from "../lib/activityLog";
@@ -263,7 +264,7 @@ export default function AdminView({ salesmen, onRefresh }) {
   const btnGreen = { padding: "4px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 14, borderRadius: 5, border: "1px solid #86c896", background: "#f0faf0", color: "var(--olive)", cursor: "pointer" };
   const btnRed = { padding: "4px 10px", fontFamily: "'IBM Plex Mono'", fontSize: 14, borderRadius: 5, border: "1px solid #fecaca", background: "#fff5f5", color: "#dc2626", cursor: "pointer" };
 
-  const allDealers = data.flatMap(sm => sm.dealers);
+  const allDealers = data.flatMap(sm => sm.dealers.map(d => ({ ...d, _salesmanName: sm.name })));
   const grandTotal = allDealers.reduce((s, d) => s + totalBalance(d.bills), 0);
   const grandCheque = allDealers.reduce((s, d) => s + totalPendingCheques(d.cheques), 0);
   const chequeDealerCount = allDealers.filter(d => pendingCheques(d.cheques).length > 0).length;
@@ -287,7 +288,8 @@ export default function AdminView({ salesmen, onRefresh }) {
           <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 30, fontWeight: 500, color: "#ea580c" }}>{fmt(grandTotal)}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => generateAgeingReport("All Salesmen", allDealers)} style={{ padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)", background: "#ffffff", color: "#334155", letterSpacing: "0.08em", cursor: "pointer" }}>⬇ Full Report</button>
+          <button onClick={() => generateAgeingReport("All Salesmen", allDealers)} style={{ padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)", background: "#ffffff", color: "#334155", letterSpacing: "0.08em", cursor: "pointer" }}>⬇ Full Report (PDF)</button>
+          <button onClick={() => generateAgeingExcelAllSalesmen(data.map(sm => ({ salesmanName: sm.name, dealers: sm.dealers })))} style={{ padding: "7px 14px", fontFamily: "'IBM Plex Mono'", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)", background: "#ffffff", color: "#334155", letterSpacing: "0.08em", cursor: "pointer" }}>⬇ Full Report (Excel)</button>
           <button onClick={fetchAll} style={btnG}>&#8635; Refresh</button>
           <button onClick={() => setShowAddSalesman(true)} style={btnP}>+ Salesman</button>
         </div>
